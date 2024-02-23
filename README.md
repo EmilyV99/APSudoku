@@ -8,16 +8,18 @@ Classic Sudoku Game
   - DeathLink support (Set before connecting!)
     - Lose a life if you check an incorrect puzzle (not an _incomplete_ puzzle), or quit a puzzle without solving it (including disconnecting).
     - Life count customizable (default 0). Dying with 0 lives left kills linked players AND resets your puzzle.
-    - On receiving a DeathLink from another player, your puzzle resets. 
+    - On receiving a DeathLink from another player, your puzzle resets.
 
 ## Building
 Clone with `--recursive` to include the submodules!
 
 ### Windows
 - Install CMake
-- Install NuGet cli
-- Run `initialize.bat`, which should install dependencies via NuGet and run cmake for you.
+- Install NuGet CLI
+- Run `initialize.bat`, which should install dependencies via NuGet and run CMake for you.
 
 ### Linux
-Good luck! If someone can PR this building properly for linux, feel free, but
-	I have no way to test Linux stuff.
+- Install CMake
+- Install NuGet CLI
+- Run `initialize.bat`, which should install dependencies via NuGet and run CMake for you.
+- Go to `build/` and run `make`.
