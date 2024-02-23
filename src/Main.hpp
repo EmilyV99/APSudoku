@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <iostream>
 #include <sstream>
+#include <iomanip>
 #include <chrono>
 #include <random>
 typedef int8_t i8;
