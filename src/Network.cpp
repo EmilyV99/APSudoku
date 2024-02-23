@@ -79,13 +79,13 @@ static void read_hint_data(bool popup)
 		return;
 	}
 	log("...loaded, parsing...", true);
-	
+
 	string slotgame = AP_GetSlotGame();
 	string const& val = *((string*)(req.value));
 	Json::Value data;
 	reader.parse(val, data);
 	for(Json::Value& v : data)
-		check_location(v["location"].asInt());
+		check_location(v["location"].asInt64());
 	log("...parsed, deleting req.value...", true);
 	delete (string*)req.value;
 }
@@ -201,21 +201,21 @@ void do_ap_connect(string const& _ip, string const& _port,
 		errtxt = "Slot is required!";
 		return;
 	}
-	
+
 	log(format("Connecting: '{}:{}', '{}', '{}'", ip,port,slot,pwd));
 	AP_SetDeathLinkAlias(slot + "_APSudoku");
 	AP_SetLoggingCallback(on_ap_log);
 	AP_SetLoggingErrorCallback(on_ap_err);
-	
+
 	string ip_port = format("{}:{}",ip,port);
 	AP_Init(ip_port.c_str(), "", slot.c_str(), pwd.c_str());
 	AP_SetDeathLinkForced(deathlink.has_value());
 	AP_SetDeathAmnestyForced(deathlink.value_or(0));
 	set<string> tags = {"Tracker","HintGame"};
 	AP_SetTags(tags);
-	
+
 	log(format("\t with tags: {}", set_string(AP_GetTags())));
-	
+
 	AP_SetItemClearCallback(on_item_clear);
 	AP_SetItemRecvCallback(on_item_receive);
 	AP_SetLocationCheckedCallback(on_location_checked);
@@ -252,7 +252,7 @@ void grant_hint()
 		pop_inf("Hinted Out!","Nothing left to hint for this slot!");
 		return;
 	}
-	
+
 	log("attempting to unlock hint...", true);
 	int basic = 0, prog = 0;
 	switch(diff)
