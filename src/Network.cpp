@@ -211,7 +211,7 @@ void do_ap_connect(string const& _ip, string const& _port,
 	AP_Init(ip_port.c_str(), "", slot.c_str(), pwd.c_str());
 	AP_SetDeathLinkForced(deathlink.has_value());
 	AP_SetDeathAmnestyForced(deathlink.value_or(0));
-	set<string> tags = {"Tracker","HintGame"};
+	set<string> tags = {"Tracker","HintGame","APSudoku"};
 	AP_SetTags(tags);
 	
 	log(format("\t with tags: {}", set_string(AP_GetTags())));
