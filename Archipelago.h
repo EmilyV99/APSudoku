@@ -14,31 +14,31 @@ bool AP_IsInit();
 void AP_Start();
 
 struct AP_NetworkVersion {
-    int major;
-    int minor;
-    int build;
+	int major;
+	int minor;
+	int build;
 };
 
 struct AP_NetworkItem {
-    int64_t item;
-    int64_t location;
-    int player;
-    int flags;
-    std::string itemName;
-    std::string locationName;
-    std::string playerName;
+	int64_t item;
+	int64_t location;
+	int player;
+	int flags;
+	std::string itemName;
+	std::string locationName;
+	std::string playerName;
 };
 
 struct AP_NetworkPlayer {
-    int team;
-    int slot;
-    std::string name;
-    std::string alias;
-    std::string game;
-    std::string name_or_alias() const
-    {
-        return (alias.empty() || alias == name) ? name : alias;
-    }
+	int team;
+	int slot;
+	std::string name;
+	std::string alias;
+	std::string game;
+	std::string name_or_alias() const
+	{
+		return (alias.empty() || alias == name) ? name : alias;
+	}
 };
 
 // Set current client version
@@ -104,34 +104,34 @@ void AP_SetDeathLinkAlias(std::string const& alias);
 /* Message Management Types */
 
 enum struct AP_MessageType {
-    Plaintext, ItemSend, ItemRecv, Hint, Countdown
+	Plaintext, ItemSend, ItemRecv, Hint, Countdown
 };
 
 struct AP_Message {
-    AP_MessageType type = AP_MessageType::Plaintext;
-    std::string text;
+	AP_MessageType type = AP_MessageType::Plaintext;
+	std::string text;
 };
 
 struct AP_ItemSendMessage : AP_Message {
-    std::string item;
-    std::string recvPlayer;
+	std::string item;
+	std::string recvPlayer;
 };
 
 struct AP_ItemRecvMessage : AP_Message {
-    std::string item;
-    std::string sendPlayer;
+	std::string item;
+	std::string sendPlayer;
 };
 
 struct AP_HintMessage : AP_Message {
-    std::string item;
-    std::string sendPlayer;
-    std::string recvPlayer;
-    std::string location;
-    bool checked;
+	std::string item;
+	std::string sendPlayer;
+	std::string recvPlayer;
+	std::string location;
+	bool checked;
 };
 
 struct AP_CountdownMessage : AP_Message {
-    int timer;
+	int timer;
 };
 
 /* Message Management Functions */
@@ -145,7 +145,7 @@ void AP_Say(std::string);
 /* Connection Information Types */
 
 enum struct AP_ConnectionStatus {
-    Disconnected, Connected, Authenticated, ConnectionRefused
+	Disconnected, Connected, Authenticated, ConnectionRefused
 };
 
 #define AP_PERMISSION_DISABLED 0b000
@@ -154,16 +154,16 @@ enum struct AP_ConnectionStatus {
 #define AP_PERMISSION_AUTO 0b110
 
 struct AP_RoomInfo {
-    AP_NetworkVersion version;
-    std::vector<std::string> tags;
-    bool password_required;
-    std::map<std::string, int> permissions;
-    int hint_cost;
-    int location_check_points;
-    //MISSING: games
-    std::map<std::string, std::string> datapackage_checksums;
-    std::string seed_name;
-    double time;
+	AP_NetworkVersion version;
+	std::vector<std::string> tags;
+	bool password_required;
+	std::map<std::string, int> permissions;
+	int hint_cost;
+	int location_check_points;
+	//MISSING: games
+	std::map<std::string, std::string> datapackage_checksums;
+	std::string seed_name;
+	double time;
 };
 
 /* Connection Information Functions */
@@ -177,38 +177,38 @@ int AP_GetPlayerTeam();
 /* Serverside Data Types */
 
 enum struct AP_RequestStatus {
-    Pending, Done, Error
+	Pending, Done, Error
 };
 
 enum struct AP_DataType {
-    Raw, Int, Double
+	Raw, Int, Double
 };
 
 struct AP_GetServerDataRequest {
-    AP_RequestStatus status;
-    std::string key;
-    void* value;
-    AP_DataType type;
+	AP_RequestStatus status;
+	std::string key;
+	void* value;
+	AP_DataType type;
 };
 
 struct AP_DataStorageOperation {
-    std::string operation;
-    void* value;
+	std::string operation;
+	void* value;
 };
 
 struct AP_SetServerDataRequest {
-    AP_RequestStatus status;
-    std::string key;
-    std::vector<AP_DataStorageOperation> operations;
-    void* default_value;
-    AP_DataType type;
-    bool want_reply;
+	AP_RequestStatus status;
+	std::string key;
+	std::vector<AP_DataStorageOperation> operations;
+	void* default_value;
+	AP_DataType type;
+	bool want_reply;
 };
 
 struct AP_SetReply {
-    std::string key;
-    void* original_value;
-    void* value;
+	std::string key;
+	void* original_value;
+	void* value;
 };
 
 /* Serverside Data Functions */
