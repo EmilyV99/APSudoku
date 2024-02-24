@@ -30,7 +30,6 @@ bool auth = false;
 bool refused = false;
 bool multiworld = true;
 bool isSSL = true;
-bool ssl_success = false;
 bool disconnecting = false;
 int ap_player_id;
 int ap_player_team;
@@ -236,6 +235,7 @@ void AP_Init(const char* ip, const char* game, const char* player_name, const ch
 	//Connect to server
 	ix::initNetSystem();
 	webSocket.setUrl("wss://" + ap_ip);
+	isSSL = true;
 	webSocket.setOnMessageCallback([](const ix::WebSocketMessagePtr& msg)
 		{
 			bool err = false;
@@ -259,15 +259,21 @@ void AP_Init(const char* ip, const char* game, const char* player_name, const ch
 			if (err || msg->type == ix::WebSocketMessageType::Error)
 			{
 				auth = false;
-				for (auto itr = map_server_data.begin(); itr != map_server_data.end();) {
+				for (auto itr = map_server_data.begin(); itr != map_server_data.end();)
+				{
 					itr->second->status = AP_RequestStatus::Error;
 					itr = map_server_data.erase(itr);
 				}
-				AP_Error(std::format("Error connecting to Archipelago. Retries: {}", msg->errorInfo.retries-1));
-				if (msg->errorInfo.retries-1 >= 2 && isSSL && !ssl_success) {
-					AP_Error("SSL connection failed. Attempting unencrypted...");
+				AP_Error(std::format("Error connecting to Archipelago. Retries: {}", msg->errorInfo.retries));
+				if (isSSL)
+				{
 					webSocket.setUrl("ws://" + ap_ip);
 					isSSL = false;
+				}
+				else
+				{
+					webSocket.setUrl("wss://" + ap_ip);
+					isSSL = true;
 				}
 			}
 		}
@@ -730,7 +736,6 @@ bool parse_response(std::string msg, std::string &request) {
 			// Avoid inconsistency if we disconnected before
 			(*resetItemValues)();
 			auth = true;
-			ssl_success = auth && isSSL;
 			refused = false;
 
 			AP_Log("Authenticated");
