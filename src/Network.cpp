@@ -85,7 +85,7 @@ static void read_hint_data(bool popup)
 	Json::Value data;
 	reader.parse(val, data);
 	for(Json::Value& v : data)
-		check_location(v["location"].asInt());
+		check_location(v["location"].asInt64());
 	log("...parsed, deleting req.value...", true);
 	delete (string*)req.value;
 }
