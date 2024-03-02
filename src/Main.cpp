@@ -301,7 +301,8 @@ void build_gui()
 					{
 						ref.flags |= FL_SELECTED;
 						pop_inf("Controls",
-							std::format("LClick: Select (Hold,Shift, or Ctrl: Multi)"
+							std::format("LClick: Select (Hold, Shift, or Ctrl: Multi)"
+							"\nDouble-LClick: Select Matching (Shift or Ctrl: Multi)"
 							"\nRClick: Select (Shift or Ctrl: Deselect)"
 							"\nWASD/Arrow Keys: Move (Shift or Ctrl: Multi)"
 							"\nNumbers: Enter ({})"
@@ -515,10 +516,10 @@ void build_gui()
 		gui_objects[SCR_SUDOKU].push_back(entry_col);
 	}
 	{ // Number Entry Buttons
-		entry_c_num = make_shared<Column>(RGRID_X, GRID_Y, 0, 0, ALLEGRO_ALIGN_CENTER);
+		entry_c_num = make_shared<Column>(RGRID_X, GRID_Y, 0, 0, ALLEGRO_ALIGN_LEFT);
 		entry_c_num->vis_proc = [](GUIObject const& ref) -> bool {return !shape_mode;};
 		
-		entry_c_shape = make_shared<Column>(RGRID_X, GRID_Y, 0, 0, ALLEGRO_ALIGN_CENTER);
+		entry_c_shape = make_shared<Column>(RGRID_X, GRID_Y, 0, 0, ALLEGRO_ALIGN_LEFT);
 		entry_c_shape->vis_proc = [](GUIObject const& ref) -> bool {return shape_mode;};
 		
 		for(int row = 0; row < 3; ++row)
@@ -593,6 +594,7 @@ void build_gui()
 			entry_c_shape->add(rs);
 		}
 		
+		shared_ptr<Row> delrow = make_shared<Row>(0,0,0,0,ALLEGRO_ALIGN_LEFT);
 		shared_ptr<Button> del = make_shared<Button>("Delete", FONT_ANSWER, 0, 0, CELL_SZ*3, CELL_SZ);
 		del->onMouse = [](InputObject& ref,MouseEvent e)
 			{
@@ -604,8 +606,31 @@ void build_gui()
 				}
 				return ref.handle_ev(e);
 			};
-		entry_c_num->add(del);
-		entry_c_shape->add(del);
+		delrow->add(del);
+		
+		shared_ptr<Button> padhelp = make_shared<Button>("?", font_l, 0, 0, CELL_SZ, CELL_SZ);
+		padhelp->onMouse = [](InputObject& ref,MouseEvent e)
+			{
+				switch(e)
+				{
+					case MOUSE_LCLICK:
+					{
+						ref.flags |= FL_SELECTED;
+						pop_inf("Controls",
+							"RClick: Toggle Button (useful for marking off finished numbers/shapes)"
+							"\nLClick: Enter number/shape (into selected cells)"
+							"\n'Delete' button: Clear contents (selected cells)",
+							CANVAS_W*0.75);
+						ref.flags &= ~FL_SELECTED;
+						break;
+					}
+				}
+				return ref.handle_ev(e);
+			};
+		delrow->add(padhelp);
+		
+		entry_c_num->add(delrow);
+		entry_c_shape->add(delrow);
 		
 		entry_c_num->sety(GRID_Y2-entry_c_num->height());
 		entry_c_shape->sety(entry_c_num->ypos());
