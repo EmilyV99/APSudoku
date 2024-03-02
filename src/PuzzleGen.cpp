@@ -361,13 +361,13 @@ void PuzzleGrid::build(Difficulty d)
 	switch(d)
 	{
 		case DIFF_EASY:
-			target_givens = 48;
+			target_givens = 46;
 			break;
 		case DIFF_NORMAL:
 			target_givens = 35;
 			break;
 		case DIFF_HARD:
-			target_givens = 24;
+			target_givens = 26;
 			break;
 	}
 	vector<GridGivenHistory> history;
