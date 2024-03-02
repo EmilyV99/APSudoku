@@ -368,6 +368,8 @@ struct Button : public BaseButton
 	optional<Color> force_fg;
 	
 	void draw() const override;
+	u16 stringw() const;
+	u16 stringh() const;
 	
 	Button();
 	Button(string const& txt);

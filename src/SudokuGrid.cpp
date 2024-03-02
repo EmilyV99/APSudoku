@@ -40,9 +40,10 @@ namespace Sudoku
 	void Cell::draw(u16 X, u16 Y, u16 W, u16 H) const
 	{
 		bool given = (flags & CFL_GIVEN);
+		bool invalid = show_invalid && (flags & CFL_INVALID);
 		Color bgc = C_CELL_BG;
 		if(shape_mode)
-			bgc = given ? C_SHAPES_GIVEN_BG : C_SHAPES_USER_BG;
+			bgc = given ? C_SHAPES_GIVEN_BG : (invalid ? C_SHAPES_INVALID_BG : C_SHAPES_USER_BG);
 		al_draw_filled_rectangle(X, Y, X+W-1, Y+H-1, bgc);
 		al_draw_rectangle(X, Y, X+W-1, Y+H-1, Color(C_CELL_BORDER), thicker_borders ? 1 : 0.5);
 		
@@ -77,13 +78,14 @@ namespace Sudoku
 		}
 		else
 		{
+			Color fgc = invalid ? C_CELL_INVALID_FG : (given ? C_CELL_GIVEN : C_CELL_TEXT);
 			if(val)
 			{
 				string text = to_string(val);
 				ALLEGRO_FONT* f = fonts[FONT_ANSWER].get();
 				int tx = (X+W/2);
 				int ty = (Y+H/2)-(al_get_font_line_height(f)/2);
-				al_draw_text(f, Color(given ? C_CELL_GIVEN : C_CELL_TEXT), tx, ty, ALLEGRO_ALIGN_CENTRE, text.c_str());
+				al_draw_text(f, fgc, tx, ty, ALLEGRO_ALIGN_CENTRE, text.c_str());
 			}
 			else if(!given)
 			{
@@ -275,12 +277,62 @@ namespace Sudoku
 				return false;
 		return true;
 	}
-	bool Grid::check() const
+	bool Grid::check()
 	{
+		bool ret = true;
 		for(Cell const& c : cells)
 			if(c.solution != c.val)
-				return false;
-		return true;
+			{
+				ret = false;
+				break;
+			}
+		if(!ret && filled()) //mark invalid cells
+		{
+			clear_invalid();
+			_invalid = true;
+			for(u8 q = 0; q < 9*9; ++q)
+			{
+				Cell& c = cells[q];
+				if(c.flags & CFL_INVALID)
+					continue;
+				if(c.flags & CFL_GIVEN)
+					continue;
+				u8 row = (q/9);
+				u8 col = (q%9);
+				for(u8 ind = 0; ind < 9; ++ind) //same row
+				{
+					Cell& other = cells[ind + (row*9)];
+					if(&other == &c) continue;
+					if(other.val == c.val)
+					{
+						c.flags |= CFL_INVALID;
+						other.flags |= CFL_INVALID;
+					}
+				}
+				for(u8 ind = 0; ind < 9; ++ind) //same col
+				{
+					Cell& other = cells[col + (ind*9)];
+					if(&other == &c) continue;
+					if(other.val == c.val)
+					{
+						c.flags |= CFL_INVALID;
+						other.flags |= CFL_INVALID;
+					}
+				}
+				u8 bcol = col - (col%3), brow = row - (row%3);
+				for(u8 ind = 0; ind < 9; ++ind) //same box
+				{
+					Cell& other = cells[(bcol + (ind%3)) + (brow + (ind/3))*9];
+					if(&other == &c) continue;
+					if(other.val == c.val)
+					{
+						c.flags |= CFL_INVALID;
+						other.flags |= CFL_INVALID;
+					}
+				}
+			}
+		}
+		return ret;
 	}
 	
 	void Grid::clear()
@@ -289,6 +341,7 @@ namespace Sudoku
 			exit();
 		for(Cell& c : cells)
 			c.clear();
+		_invalid = false;
 	}
 	void Grid::exit()
 	{
@@ -299,9 +352,11 @@ namespace Sudoku
 	}
 	void Grid::clear_invalid()
 	{
-		for(Cell& c : cells)
+		if(_invalid)
 		{
-			c.flags &= ~CFL_INVALID;
+			_invalid = false;
+			for(Cell& c : cells)
+				c.flags &= ~CFL_INVALID;
 		}
 	}
 	void Grid::draw() const
@@ -453,8 +508,13 @@ namespace Sudoku
 	{
 		return cells[0].solution != 0;
 	}
+	bool Grid::has_invalid() const
+	{
+		return _invalid;
+	}
 	void Grid::generate(Difficulty d)
 	{
+		_invalid = false;
 		auto vec = PuzzleGen::gen_puzzle(diff);
 		for(u8 q = 0; q < 9*9; ++q)
 		{
@@ -644,7 +704,8 @@ namespace Sudoku
 	}
 	
 	Grid::Grid(u16 X, u16 Y)
-		: InputObject(X,Y,9*CELL_SZ,9*CELL_SZ)
+		: InputObject(X,Y,9*CELL_SZ,9*CELL_SZ), _invalid(false), focus_cell(nullptr),
+		onExit(), selected()
 	{}
 }
 

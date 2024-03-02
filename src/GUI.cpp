@@ -855,6 +855,14 @@ void Button::draw() const
 	al_draw_text(f, fg, tx, ty, ALLEGRO_ALIGN_CENTRE, text.c_str());
 }
 
+u16 Button::stringw() const
+{
+	return al_get_text_width(font.get().get_base(), text.c_str());
+}
+u16 Button::stringh() const
+{
+	return al_get_font_line_height(font.get().get_base());
+}
 Button::Button()
 	: BaseButton(), font(FontDef(-20, false, BOLD_NONE))
 {}

@@ -349,6 +349,29 @@ void build_gui()
 				}
 			};
 		gui_objects[SCR_SUDOKU].push_back(nogame);
+		
+		auto btn_clear_invalid = make_shared<Button>("Clear Invalid Marks", font_l);
+		btn_clear_invalid->w = 8+btn_clear_invalid->stringw();
+		btn_clear_invalid->h = 4+btn_clear_invalid->stringh();
+		btn_clear_invalid->setx(GRID_X + (GRID_SZ-btn_clear_invalid->w)/2);
+		btn_clear_invalid->sety(GRID_Y2);
+		btn_clear_invalid->vis_proc = [](GUIObject const& ref) -> bool
+			{
+				return show_invalid && grid->has_invalid();
+			};
+		btn_clear_invalid->onMouse = [](InputObject& ref,MouseEvent e)
+			{
+				switch(e)
+				{
+					case MOUSE_LCLICK:
+					{
+						grid->clear_invalid();
+						return MRET_OK;
+					}
+				}
+				return ref.handle_ev(e);
+			};
+		gui_objects[SCR_SUDOKU].push_back(btn_clear_invalid);
 	}
 	{ // Difficulty / game buttons
 		shared_ptr<Column> diff_column = make_shared<Column>(BUTTON_X,GRID_Y,0,2,ALLEGRO_ALIGN_LEFT);
@@ -501,7 +524,7 @@ void build_gui()
 		entry_col->add(shapes_check);
 		
 		auto cellborder_check = make_shared<CheckBox>("Thicker Borders", font_s);
-		if(shape_mode)
+		if(thicker_borders)
 			cellborder_check->flags |= FL_SELECTED;
 		cellborder_check->onMouse = [](InputObject& ref,MouseEvent e)
 			{
@@ -512,6 +535,19 @@ void build_gui()
 				return ret;
 			};
 		entry_col->add(cellborder_check);
+		
+		auto showinvalid_check = make_shared<CheckBox>("Show Invalid on Check", font_s);
+		if(show_invalid)
+			showinvalid_check->flags |= FL_SELECTED;
+		showinvalid_check->onMouse = [](InputObject& ref,MouseEvent e)
+			{
+				auto ret = ref.handle_ev(e);
+				show_invalid = (ref.flags & FL_SELECTED);
+				set_config_bool("Sudoku", "show_invalid", show_invalid);
+				save_cfg(CFG_ROOT);
+				return ret;
+			};
+		entry_col->add(showinvalid_check);
 		
 		gui_objects[SCR_SUDOKU].push_back(entry_col);
 	}
@@ -835,7 +871,7 @@ void setup_allegro();
 void save_cfg();
 volatile bool program_running = true;
 u64 cur_frame = 0;
-bool shape_mode = false, thicker_borders = false, verbose_log = false;
+bool shape_mode = false, thicker_borders = false, show_invalid = false, verbose_log = false;
 void run_events(bool& redraw)
 {
 	ALLEGRO_EVENT ev;
@@ -999,6 +1035,10 @@ void default_configs() // Resets configs to default
 	add_config_comment("GUI", "Output extra info to the console");
 	set_config_bool("GUI", "verbose_log", true);
 	
+	add_config_section("Sudoku");
+	add_config_comment("Sudoku", "When 'Check'ing an invalid solution, highlight the errors");
+	set_config_bool("Sudoku", "show_invalid", false);
+	
 	Theme::reset();
 }
 void refresh_configs() // Uses values in the loaded configs to change the program
@@ -1039,6 +1079,7 @@ void refresh_configs() // Uses values in the loaded configs to change the progra
 	BOOL_READ(shift_center, "GUI", "shift_center")
 	BOOL_READ(shape_mode, "GUI", "shape_mode")
 	BOOL_READ(thicker_borders, "GUI", "thicker_borders")
+	BOOL_READ(show_invalid, "Sudoku", "show_invalid")
 	BOOL_READ(verbose_log, "GUI", "verbose_log")
 	
 	if(wrote_any)

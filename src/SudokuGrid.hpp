@@ -6,13 +6,6 @@
 
 namespace Sudoku
 {
-	// Return results for checking the state of the puzzle
-	typedef u8 PuzzleState;
-	#define PS_SOLVED     0b0000 //All cells are filled correctly
-	#define PS_INCOMPLETE 0b0001 //At least one cell is empty
-	#define PS_INVALID    0b0010 //Two cells conflict with one another
-	#define PS_WRONG      0b0100 //A cell conflicts with the solution
-	
 	// Flags for cells
 	#define CFL_GIVEN      0b0001
 	#define CFL_INVALID    0b0010
@@ -57,7 +50,7 @@ namespace Sudoku
 		optional<u8> find(Cell* c);
 		
 		bool filled() const;
-		bool check() const;
+		bool check();
 		
 		void clear();
 		void exit();
@@ -71,6 +64,7 @@ namespace Sudoku
 		set<Cell*> get_selected() const {return selected;}
 		
 		bool active() const;
+		bool has_invalid() const;
 		void generate(Difficulty d);
 		
 		void enter(u8 val);
@@ -81,7 +75,7 @@ namespace Sudoku
 	private:
 		set<Cell*> selected;
 		Cell* focus_cell;
-		
+		bool _invalid;
 	};
 }
 
