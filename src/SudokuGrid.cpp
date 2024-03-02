@@ -399,6 +399,55 @@ namespace Sudoku
 		c->flags |= CFL_SELECTED;
 		focus_cell = c;
 	}
+	void Grid::super_select(Cell* sel)
+	{
+		if(!find(sel))
+			throw sudoku_exception("Cannot select cell not from this grid!");
+		u16 center = 0, corner = 0;
+		for(int q = 0; q < 9; ++q)
+		{
+			if(sel->center_marks[q])
+				center |= 0b1<<q;
+			if(sel->corner_marks[q])
+				corner |= 0b1<<q;
+		}
+		for(Cell& c : cells)
+		{
+			if(sel->val)
+			{
+				if(c.val == sel->val)
+					select(&c);
+			}
+			else if(center)
+			{
+				u16 mark = 0;
+				for(int q = 0; q < 9; ++q)
+				{
+					if(c.center_marks[q])
+						mark |= 0b1<<q;
+				}
+				if(mark == center)
+					select(&c);
+			}
+			else if(corner)
+			{
+				u16 mark = 0;
+				for(int q = 0; q < 9; ++q)
+				{
+					if(c.corner_marks[q])
+						mark |= 0b1<<q;
+				}
+				if(mark == corner)
+					select(&c);
+			}
+			else
+			{
+				if(!c.val)
+					select(&c);
+			}
+		}
+		select(sel);
+	}
 	
 	bool Grid::active() const
 	{
@@ -546,6 +595,17 @@ namespace Sudoku
 		u32 ret = MRET_OK;
 		switch(e)
 		{
+			case MOUSE_DLCLICK:
+				if(focus_cell && focus_cell == get_hov())
+				{
+					ret |= MRET_TAKEFOCUS|MRET_USED_DBL;
+					Cell* c = focus_cell;
+					if(!(cur_input->shift() || cur_input->ctrl_cmd()))
+						deselect();
+					super_select(c);
+					break;
+				}
+			[[fallthrough]];
 			case MOUSE_LCLICK:
 				ret |= MRET_TAKEFOCUS;
 				if(!(cur_input->shift() || cur_input->ctrl_cmd()))

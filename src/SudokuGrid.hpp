@@ -67,6 +67,7 @@ namespace Sudoku
 		void deselect();
 		void deselect(Cell* c);
 		void select(Cell* c);
+		void super_select(Cell* c);
 		set<Cell*> get_selected() const {return selected;}
 		
 		bool active() const;
