@@ -57,7 +57,7 @@ void BmpBlender::set_opacity_mode()
 
 void DrawContainer::run()
 {
-	al_get_mouse_state(cur_input);
+	cur_input->update_start();
 	auto buttons = cur_input->buttons;
 	auto os = cur_input->oldstate & 0x7;
 	
@@ -75,7 +75,7 @@ void DrawContainer::run()
 	mouse();
 	tick();
 	
-	cur_input->oldstate = cur_input->buttons;
+	cur_input->update_end();
 }
 void DrawContainer::draw() const
 {
@@ -127,8 +127,8 @@ void DrawContainer::key_event(ALLEGRO_EVENT const& ev)
 }
 void DrawContainer::run_loop()
 {
-	al_get_mouse_state(cur_input);
-	cur_input->oldstate = cur_input->buttons;
+	cur_input->update_start();
+	cur_input->update_end();
 	redraw = true;
 	while(program_running && (!run_proc || run_proc()))
 	{
@@ -207,6 +207,32 @@ void clear_a5_bmp(Color col, ALLEGRO_BITMAP* bmp)
 		al_restore_state(&old_state);
 	}
 	else al_clear_to_color(col);
+}
+bool ClickInfo::check(ClickInfo const& other) const
+{
+	static const double DCLICK_DELAY = 1.0;
+	return other.target == target && abs(other.time-time) < DCLICK_DELAY;
+}
+void InputState::update_start()
+{
+	al_get_mouse_state(this);
+	
+	dblstate = 0;
+	double tm = al_get_time();
+	ClickInfo inf = {hovered,tm};
+	for(int q = 0; q < 3; ++q)
+	{
+		if((buttons & (0b1<<q)) && !(oldstate & (0b1<<q)))
+		{
+			if(dclicks[q].check(inf))
+				dblstate |= 0b1 << q;
+			dclicks[q] = inf;
+		}
+	}
+}
+void InputState::update_end()
+{
+	oldstate = buttons;
 }
 
 bool InputState::shift() const
@@ -381,6 +407,11 @@ void InputObject::process(u32 retcode)
 	if(retcode & MRET_TAKEFOCUS)
 		focus();
 }
+bool InputObject::process_dbl(u32 retcode)
+{
+	process(retcode);
+	return retcode&MRET_USED_DBL;
+}
 bool InputObject::mouse()
 {
 	if(!visible()) return false;
@@ -408,7 +439,22 @@ bool InputObject::mouse()
 		else if(m.lrelease())
 			process(mouse_event(MOUSE_MRELEASE));
 		
-		if(m.lclick())
+		if(m.dlclick())
+		{
+			if(!process_dbl(mouse_event(MOUSE_DLCLICK)))
+				process(mouse_event(MOUSE_LCLICK));
+		}
+		else if(m.drclick())
+		{
+			if(!process_dbl(mouse_event(MOUSE_DRCLICK)))
+				process(mouse_event(MOUSE_RCLICK));
+		}
+		else if(m.dmclick())
+		{
+			if(!process_dbl(mouse_event(MOUSE_DMCLICK)))
+				process(mouse_event(MOUSE_MCLICK));
+		}
+		else if(m.lclick())
 			process(mouse_event(MOUSE_LCLICK));
 		else if(m.rclick())
 			process(mouse_event(MOUSE_RCLICK));

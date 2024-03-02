@@ -33,22 +33,39 @@ struct BmpBlender
 
 struct InputObject;
 struct GUIObject;
+struct ClickInfo
+{
+	InputObject* target = nullptr;
+	double time = 0.0;
+	
+	bool check(ClickInfo const& other) const;
+};
 struct InputState : public ALLEGRO_MOUSE_STATE
 {
 	int oldstate = 0;
+	int dblstate = 0;
 	InputObject* hovered = nullptr;
 	InputObject* focused = nullptr;
 	InputObject* new_focus = nullptr;
+	ClickInfo dclicks[3];
 	
+	void update_start();
+	void update_end();
+	
+	bool dlclick() const {return (dblstate&0x7) == 0x1 && lclick();}
+	bool drclick() const {return (dblstate&0x7) == 0x2 && rclick();}
+	bool dmclick() const {return (dblstate&0x7) == 0x4 && mclick();}
 	bool lclick() const {return (buttons&0x7) == 0x1 && !(oldstate&0x7);}
 	bool rclick() const {return (buttons&0x7) == 0x2 && !(oldstate&0x7);}
 	bool mclick() const {return (buttons&0x7) == 0x4 && !(oldstate&0x7);}
 	bool lrelease() const {return !(buttons&0x1) && (oldstate&0x7) == 0x1;}
 	bool rrelease() const {return !(buttons&0x2) && (oldstate&0x7) == 0x2;}
 	bool mrelease() const {return !(buttons&0x4) && (oldstate&0x7) == 0x4;}
+	
 	bool shift() const;
 	bool ctrl_cmd() const;
 	bool alt() const;
+	
 	bool unfocus();
 	bool refocus(InputObject* targ);
 };
@@ -107,6 +124,9 @@ enum MouseEvent
 	MOUSE_LCLICK,
 	MOUSE_RCLICK,
 	MOUSE_MCLICK,
+	MOUSE_DLCLICK,
+	MOUSE_DRCLICK,
+	MOUSE_DMCLICK,
 	MOUSE_LRELEASE,
 	MOUSE_RRELEASE,
 	MOUSE_MRELEASE,
@@ -119,6 +139,7 @@ enum MouseEvent
 
 #define MRET_OK         (u32(0x00))
 #define MRET_TAKEFOCUS  (u32(0x01))
+#define MRET_USED_DBL   (u32(0x02))
 
 #define FL_SELECTED 0b00000001
 #define FL_DISABLED 0b00000010
@@ -200,6 +221,7 @@ struct InputObject : public GUIObject
 		mouseflags(0), onMouse(), tab_target(nullptr) {}
 private:
 	void process(u32 retcode);
+	bool process_dbl(u32 retcode);
 };
 
 struct DrawWrapper : public InputObject
