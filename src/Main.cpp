@@ -131,17 +131,11 @@ Screen curscr = SCR_SUDOKU;
 
 map<Screen,DrawContainer> gui_objects;
 vector<DrawContainer*> popups;
-bool settings_unsaved = false;
 
 void swap_screen(Screen scr)
 {
 	if(curscr == scr)
 		return;
-	// if(curscr == SCR_SETTINGS && settings_unsaved)
-	// {
-		// if(!pop_yn("Change pages", "Swap pages without saving your settings?"))
-			// return;
-	// }
 	curscr = scr;
 }
 
@@ -244,10 +238,10 @@ void build_gui()
 			}
 		swap_btns[0] = make_shared<Button>("Sudoku", font_l);
 		swap_btns[1] = make_shared<Button>("Archipelago", font_l);
-		//swap_btns[2] = make_shared<Button>("Settings", font_l);
+		swap_btns[2] = make_shared<Button>("Settings", font_l);
 		ON_SWAP_BTN(swap_btns[0], SCR_SUDOKU);
 		ON_SWAP_BTN(swap_btns[1], SCR_CONNECT);
-		//ON_SWAP_BTN(swap_btns[2], SCR_SETTINGS);
+		ON_SWAP_BTN(swap_btns[2], SCR_SETTINGS);
 		shared_ptr<Column> sb_column = make_shared<Column>(BUTTON_X, BUTTON_Y, 0, 2, ALLEGRO_ALIGN_CENTER);
 		for(shared_ptr<Button> const& b : swap_btns)
 			sb_column->add(b);
@@ -833,6 +827,153 @@ void build_gui()
 		sw->add(cont_con);
 		gui_objects[SCR_CONNECT].push_back(sw);
 	}
+	{ // Settings
+		//!TODO themes stuff - theme editor, loader, saver
+		auto check_col = make_shared<Column>(GRID_X,GRID_Y,0,1,ALLEGRO_ALIGN_LEFT);
+		
+		{ //Checkbox settings
+			auto cache_login_check = make_shared<CheckBox>("Cache Login Info", font_s);
+			if(get_config_bool("Archipelago", "do_cache_login").value_or(false))
+				cache_login_check->flags |= FL_SELECTED;
+			cache_login_check->onMouse = [](InputObject& ref,MouseEvent e)
+				{
+					auto ret = ref.handle_ev(e);
+					set_config_bool("Archipelago", "do_cache_login", (ref.flags & FL_SELECTED));
+					save_cfg(CFG_ROOT);
+					return ret;
+				};
+			check_col->add(cache_login_check);
+			
+			auto cache_pwd_check = make_shared<CheckBox>("Cache Login Password", font_s);
+			if(get_config_bool("Archipelago", "do_cache_pwd").value_or(false))
+				cache_pwd_check->flags |= FL_SELECTED;
+			cache_pwd_check->onMouse = [](InputObject& ref,MouseEvent e)
+				{
+					auto ret = ref.handle_ev(e);
+					set_config_bool("Archipelago", "do_cache_pwd", (ref.flags & FL_SELECTED));
+					save_cfg(CFG_ROOT);
+					return ret;
+				};
+			check_col->add(cache_pwd_check);
+			
+			auto shift_center_check = make_shared<CheckBox>("Shift=Center,Ctrl=Corner", font_s);
+			if(shift_center)
+				shift_center_check->flags |= FL_SELECTED;
+			shift_center_check->onMouse = [](InputObject& ref,MouseEvent e)
+				{
+					auto ret = ref.handle_ev(e);
+					shift_center = (ref.flags & FL_SELECTED);
+					set_config_bool("Sudoku", "shift_center", shift_center);
+					save_cfg(CFG_ROOT);
+					return ret;
+				};
+			check_col->add(shift_center_check);
+			
+			auto verbose_log_check = make_shared<CheckBox>("Verbose Logging", font_s);
+			if(verbose_log)
+				verbose_log_check->flags |= FL_SELECTED;
+			verbose_log_check->onMouse = [](InputObject& ref,MouseEvent e)
+				{
+					auto ret = ref.handle_ev(e);
+					verbose_log = (ref.flags & FL_SELECTED);
+					set_config_bool("GUI", "verbose_log", verbose_log);
+					save_cfg(CFG_ROOT);
+					return ret;
+				};
+			check_col->add(verbose_log_check);
+		}
+		gui_objects[SCR_SETTINGS].push_back(check_col);
+		
+		auto lblx = check_col->xpos()+check_col->width()+4;
+		auto topy = check_col->ypos();
+		auto lbl_wrap = make_shared<MiscDrawWrapper>();
+		lbl_wrap->add(make_shared<Label>("Launch Res X:", font_l, ALLEGRO_ALIGN_LEFT));
+		lbl_wrap->add(make_shared<Label>("Launch Res Y:", font_l, ALLEGRO_ALIGN_LEFT));
+		static u16 lblw = 0;
+		lblw = 0;
+		for(auto ptr : lbl_wrap->cont)
+			lblw = std::max(lblw,ptr->width());
+		auto lbl_rx = lblx+lblw;
+		auto tfw = BUTTON_X - 16 - lbl_rx;
+		
+		auto col_tf = make_shared<Column>(lbl_rx+2,topy,0,1,ALLEGRO_ALIGN_LEFT);
+		{
+			auto resx = get_config_dbl("GUI", "resx").value_or(CANVAS_W*2.0);
+			auto tf = make_shared<TextField>(0, 0, tfw, std::format("{}",resx), font_l);
+			tf->onValidate = [](string const& o, string const& n, char c)
+				{
+					return validate_numeric(o,n,c);
+				};
+			tf->onUpdate = [](TextField& tf)
+				{
+					if(tf.is_uint())
+					{
+						int v = tf.get_int();
+						if(v < CANVAS_W)
+							v = CANVAS_W;
+						set_config_int("GUI", "resx", v);
+						save_cfg(CFG_ROOT);
+					}
+				};
+			col_tf->add(tf);
+		}
+		{
+			auto resy = get_config_dbl("GUI", "resy").value_or(CANVAS_H*2.0);
+			auto tf = make_shared<TextField>(0, 0, tfw, std::format("{}",resy), font_l);
+			tf->onValidate = [](string const& o, string const& n, char c)
+				{
+					return validate_numeric(o,n,c);
+				};
+			tf->onUpdate = [](TextField& tf)
+				{
+					if(tf.is_uint())
+					{
+						int v = tf.get_int();
+						if(v < CANVAS_H)
+							v = CANVAS_H;
+						set_config_int("GUI", "resy", v);
+						save_cfg(CFG_ROOT);
+					}
+				};
+			col_tf->add(tf);
+		}
+		
+		MiscDrawWrapper* lbl_ptr = lbl_wrap.get();
+		Column* col_tf_ptr = col_tf.get();
+		Column* check_col_ptr = check_col.get();
+		lbl_wrap->onResizeDisplay = [](GUIObject& ref)
+			{
+				ref.realign();
+			};
+		lbl_wrap->onRealign = [lbl_ptr,col_tf_ptr,check_col_ptr](size_t start)
+			{
+				lblw = 0;
+				auto& lbls = lbl_ptr->cont;
+				auto& refobjs = col_tf_ptr->cont;
+				for(auto ptr : lbls)
+					lblw = std::max(lblw,ptr->true_width());
+				unscale_x(lblw);
+				u16 ccwid = check_col_ptr->true_width();
+				unscale_x(ccwid);
+				auto lblx = check_col_ptr->xpos()+ccwid+4;;
+				auto lbl_rx = lblx+lblw;
+				auto tfw = BUTTON_X - 16 - lbl_rx;
+				for(auto& ptr : col_tf_ptr->cont)
+					ptr->setw(tfw);
+				col_tf_ptr->setx(lbl_rx+2);
+				col_tf_ptr->realign();
+				for(size_t q = 0; q < lbls.size(); ++q)
+				{
+					auto& lbl = lbls[q];
+					auto& refobj = refobjs[q];
+					lbl->setx(lbl_rx-_unscale_x(lbl->true_width()));
+					lbl->sety((refobj->ypos()+refobj->height()/2)-lbl->height()/2);
+				}
+			};
+		lbl_wrap->realign();
+		gui_objects[SCR_SETTINGS].push_back(lbl_wrap);
+		gui_objects[SCR_SETTINGS].push_back(col_tf);
+	}
 }
 
 void dlg_draw()
@@ -1024,10 +1165,9 @@ void default_configs() // Resets configs to default
 	set_config_str("Archipelago", "cached_pwd", "");
 	
 	add_config_section("GUI");
-	add_config_comment("GUI", "The multiplier for the window's starting size on launch");
-	set_config_dbl("GUI", "start_scale", 2.0);
-	add_config_comment("GUI", "If 'shift' should do center-marks (true) or corner-marks (false)");
-	set_config_bool("GUI", "shift_center", false);
+	add_config_comment("GUI", "The window's starting size on launch");
+	set_config_int("GUI", "resx", CANVAS_W*2.0);
+	set_config_int("GUI", "resy", CANVAS_H*2.0);
 	add_config_comment("GUI", "Use colored shapes instead of numbers");
 	set_config_bool("GUI", "shape_mode", false);
 	add_config_comment("GUI", "Thicken the borders of cells slightly");
@@ -1036,6 +1176,8 @@ void default_configs() // Resets configs to default
 	set_config_bool("GUI", "verbose_log", true);
 	
 	add_config_section("Sudoku");
+	add_config_comment("Sudoku", "If 'shift' should do center-marks (true) or corner-marks (false)");
+	set_config_bool("Sudoku", "shift_center", false);
 	add_config_comment("Sudoku", "When 'Check'ing an invalid solution, highlight the errors");
 	set_config_bool("Sudoku", "show_invalid", false);
 	
@@ -1076,7 +1218,7 @@ void refresh_configs() // Uses values in the loaded configs to change the progra
 	INT_BOUND(Grid::sel_style,0,NUM_STYLE-1,"Style","Grid: Cursor 2 Style")
 	Theme::read_palette();
 	set_cfg(CFG_ROOT);
-	BOOL_READ(shift_center, "GUI", "shift_center")
+	BOOL_READ(shift_center, "Sudoku", "shift_center")
 	BOOL_READ(shape_mode, "GUI", "shape_mode")
 	BOOL_READ(thicker_borders, "GUI", "thicker_borders")
 	BOOL_READ(show_invalid, "Sudoku", "show_invalid")
@@ -1110,10 +1252,15 @@ void setup_allegro()
 	load_cfg();
 	save_cfg();
 	
-	double start_scale = get_config_dbl("GUI", "start_scale").value_or(2.0);
+	render_resx = get_config_dbl("GUI", "resx").value_or(CANVAS_W*2.0);
+	render_resy = get_config_dbl("GUI", "resy").value_or(CANVAS_H*2.0);
+	if(render_resx < CANVAS_W)
+		render_resx = CANVAS_W;
+	if(render_resy < CANVAS_H)
+		render_resy = CANVAS_H;
 	
 	al_set_new_display_flags(ALLEGRO_RESIZABLE);
-	display = al_create_display(CANVAS_W*start_scale, CANVAS_H*start_scale);
+	display = al_create_display(render_resx, render_resy);
 	if(!display)
 		fail("Failed to create display!");
 	
@@ -1139,6 +1286,7 @@ void setup_allegro()
 	al_apply_window_constraints(display, true);
 	
 	refresh_configs();
+	render_resx = -1; //force on_resize to run
 	on_resize();
 	init_fonts();
 	init_shapes();

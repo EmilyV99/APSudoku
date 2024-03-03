@@ -306,6 +306,14 @@ void scale_y(u16& y)
 {
 	y *= render_yscale;
 }
+u16 _scale_x(u16 x)
+{
+	return x * render_xscale;
+}
+u16 _scale_y(u16 y)
+{
+	return y * render_yscale;
+}
 void scale_pos(u16& x, u16& y)
 {
 	x *= render_xscale;
@@ -333,6 +341,14 @@ void unscale_y(u16& y)
 {
 	y /= render_yscale;
 }
+u16 _unscale_x(u16 x)
+{
+	return x / render_xscale;
+}
+u16 _unscale_y(u16 y)
+{
+	return y / render_yscale;
+}
 void unscale_pos(u16& x, u16& y)
 {
 	x /= render_xscale;
@@ -348,7 +364,7 @@ void unscale_pos(u16& x, u16& y, u16& w, u16& h)
 void GUIObject::on_disp_resize()
 {
 	if(onResizeDisplay)
-		onResizeDisplay();
+		onResizeDisplay(*this);
 	realign();
 }
 bool GUIObject::disabled() const
@@ -508,9 +524,26 @@ u16 Column::height() const
 		H += obj->height() + spacing;
 	return H;
 }
+u16 Column::true_width() const
+{
+	return _scale_x(w+2*padding);
+}
+u16 Column::true_height() const
+{
+	u16 H = 2*padding;
+	for(shared_ptr<GUIObject> const& obj : cont)
+		H += obj->true_height() + spacing;
+	return H;
+}
 void Column::realign(size_t start)
 {
 	u16 H = padding;
+	auto oldw = w;
+	w = 0;
+	for(auto& obj : cont)
+		w = std::max(w,obj->width());
+	if(w != oldw)
+		start = 0;
 	for(size_t q = 0; q < start; ++q)
 	{
 		shared_ptr<GUIObject>& obj = cont[q];
@@ -566,9 +599,26 @@ u16 Row::height() const
 {
 	return h+2*padding;
 }
+u16 Row::true_width() const
+{
+	u16 W = 2*padding;
+	for(shared_ptr<GUIObject> const& obj : cont)
+		W += obj->true_width() + spacing;
+	return W;
+}
+u16 Row::true_height() const
+{
+	return _scale_y(h+2*padding);
+}
 void Row::realign(size_t start)
 {
 	u16 W = padding;
+	auto oldh = h;
+	h = 0;
+	for(auto& obj : cont)
+		h = std::max(h,obj->height());
+	if(h != oldh)
+		start = 0;
 	for(size_t q = 0; q < start; ++q)
 	{
 		shared_ptr<GUIObject>& obj = cont[q];
@@ -713,6 +763,16 @@ u16 RadioButton::width() const
 u16 RadioButton::height() const
 {
 	ALLEGRO_FONT* f = font.get().get_base();
+	return std::max(al_get_font_line_height(f), radius*2);
+}
+u16 RadioButton::true_width() const
+{
+	ALLEGRO_FONT* f = font.get().get();
+	return radius*2 + pad*2 + al_get_text_width(f, text.c_str());
+}
+u16 RadioButton::true_height() const
+{
+	ALLEGRO_FONT* f = font.get().get();
 	return std::max(al_get_font_line_height(f), radius*2);
 }
 double RadioButton::fill_sel = 0.5;
@@ -1006,6 +1066,16 @@ u16 Label::height() const
 	ALLEGRO_FONT* f = font.get().get_base();
 	return f ? al_get_font_line_height(f) : 0;
 }
+u16 Label::true_width() const
+{
+	ALLEGRO_FONT* f = font.get().get();
+	return f ? al_get_text_width(f, text.c_str()) : 0;
+}
+u16 Label::true_height() const
+{
+	ALLEGRO_FONT* f = font.get().get();
+	return f ? al_get_font_line_height(f) : 0;
+}
 Label::Label()
 	: InputObject(), text(), text_proc()
 {}
@@ -1099,15 +1169,90 @@ u16 TextField::height() const
 
 int TextField::get_int() const
 {
-	return std::stoi(content);
+	try
+	{
+		return std::stoi(content);
+	}
+	catch(...)
+	{
+		return 0;
+	}
 }
 double TextField::get_double() const
 {
-	return std::stod(content);
+	try
+	{
+		return std::stod(content);
+	}
+	catch(...)
+	{
+		return 0.0;
+	}
 }
 string TextField::get_str() const
 {
 	return content;
+}
+bool TextField::is_int() const
+{
+	bool first = true;
+	for(char c : content)
+	{
+		if(c < '0' || c > '9')
+		{
+			if(!(first && c == '-'))
+				return false;
+		}
+		first = false;
+	}
+	return true;
+}
+bool TextField::is_uint() const
+{
+	for(char c : content)
+	{
+		if(c < '0' || c > '9')
+			return false;
+	}
+	return true;
+}
+bool TextField::is_double() const
+{
+	bool first = true;
+	bool dec = false;
+	for(char c : content)
+	{
+		if(c < '0' || c > '9')
+		{
+			if(!dec && c == '.')
+			{
+				dec = true;
+				first = false;
+				continue;
+			}
+			if(!(first && c == '-'))
+				return false;
+		}
+		first = false;
+	}
+	return true;
+}
+bool TextField::is_udouble() const
+{
+	bool dec = false;
+	for(char c : content)
+	{
+		if(c < '0' || c > '9')
+		{
+			if(!dec && c == '.')
+			{
+				dec = true;
+				continue;
+			}
+			return false;
+		}
+	}
+	return true;
 }
 
 static bool badchar(char c)
@@ -1225,12 +1370,14 @@ void TextField::key_event(ALLEGRO_EVENT const& ev)
 					{
 						content = before_sel() + after_sel();
 						cpos = cpos2 = std::min(cpos,cpos2);
+						update();
 					}
 					else if(cpos > 0)
 					{
 						content = content.substr(0,cpos-1) + content.substr(cpos);
 						--cpos;
 						cpos2 = cpos;
+						update();
 					}
 					break;
 				case ALLEGRO_KEY_DELETE:
@@ -1238,10 +1385,12 @@ void TextField::key_event(ALLEGRO_EVENT const& ev)
 					{
 						content = before_sel() + after_sel();
 						cpos = cpos2 = std::min(cpos,cpos2);
+						update();
 					}
 					else if(cpos < content.size())
 					{
 						content = content.substr(0,cpos) + content.substr(cpos+1);
+						update();
 					}
 					break;
 				case ALLEGRO_KEY_V:
@@ -1281,6 +1430,7 @@ void TextField::key_event(ALLEGRO_EVENT const& ev)
 				{
 					content = nc;
 					cpos2 = cpos = std::min(cpos,cpos2)+1;
+					update();
 				}
 			}
 			break;
@@ -1289,12 +1439,18 @@ void TextField::key_event(ALLEGRO_EVENT const& ev)
 	InputObject::key_event(ev);
 }
 
+void TextField::update()
+{
+	if(onUpdate)
+		onUpdate(*this);
+}
 void TextField::cut()
 {
 	if(cpos == cpos2) return;
 	copy();
 	content = before_sel() + after_sel();
 	cpos2 = cpos = std::min(cpos,cpos2);
+	update();
 }
 void TextField::copy()
 {
@@ -1312,6 +1468,7 @@ void TextField::paste()
 		{
 			content = before_sel() + s + after_sel();
 			cpos2 = cpos = std::min(cpos,cpos2)+u16(s.size());
+			update();
 		}
 		
 		al_free(str);

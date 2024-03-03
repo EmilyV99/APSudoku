@@ -69,7 +69,6 @@ bool events_empty();
 void on_resize();
 
 extern volatile bool program_running;
-extern bool settings_unsaved;
 
 struct Hint
 {
@@ -87,7 +86,7 @@ enum Screen
 {
 	SCR_SUDOKU,
 	SCR_CONNECT,
-	//SCR_SETTINGS,
+	SCR_SETTINGS,
 	NUM_SCRS
 };
 enum EntryMode

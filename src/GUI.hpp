@@ -106,12 +106,16 @@ void scale_min(u16& v);
 void scale_max(u16& v);
 void scale_x(u16& x);
 void scale_y(u16& y);
+u16 _scale_x(u16 x);
+u16 _scale_y(u16 y);
 void scale_pos(u16& x, u16& y);
 void scale_pos(u16& x, u16& y, u16& w, u16& h);
 void unscale_min(u16& v);
 void unscale_max(u16& v);
 void unscale_x(u16& x);
 void unscale_y(u16& y);
+u16 _unscale_x(u16 x);
+u16 _unscale_y(u16 y);
 void unscale_pos(u16& x, u16& y);
 void unscale_pos(u16& x, u16& y, u16& w, u16& h);
 
@@ -157,7 +161,7 @@ struct GUIObject
 	u8 flags;
 	u8 custom_flags;
 	u8 type;
-	std::function<void()> onResizeDisplay;
+	std::function<void(GUIObject&)> onResizeDisplay;
 	//Obj is disabled if this returns true, OR flags&FL_DISABLED
 	std::function<bool(GUIObject const&)> dis_proc;
 	//If set, obj is selected iff returns true,
@@ -176,8 +180,12 @@ struct GUIObject
 	virtual u16 ypos() const {return 0;}
 	virtual void setx(u16 v) {}
 	virtual void sety(u16 v) {}
+	virtual void setw(u16 v) {}
+	virtual void seth(u16 v) {}
 	virtual u16 width() const {return 0;}
 	virtual u16 height() const {return 0;}
+	virtual u16 true_width() const {return width();}
+	virtual u16 true_height() const {return height();}
 	virtual bool disabled() const;
 	virtual bool selected() const;
 	virtual bool visible() const;
@@ -203,6 +211,8 @@ struct InputObject : public GUIObject
 	virtual u16 ypos() const override {return y;}
 	void setx(u16 v) override {x = v + (x-xpos());}
 	void sety(u16 v) override {y = v + (y-ypos());}
+	void setw(u16 v) override {w = v;}
+	void seth(u16 v) override {h = v;}
 	virtual u16 width() const override {return w;}
 	virtual u16 height() const override {return h;}
 	virtual u32 handle_ev(MouseEvent ev);
@@ -230,21 +240,39 @@ struct DrawWrapper : public InputObject
 	virtual void draw() const override;
 	virtual bool mouse() override;
 	virtual void tick() override;
-	virtual u16 width() const override = 0;
-	virtual u16 height() const override = 0;
+	virtual u16 width() const override {return 0;}
+	virtual u16 height() const override {return 0;}
 	
 	virtual void add(shared_ptr<GUIObject> obj) {cont.emplace_back(obj);}
 	DrawWrapper() = default;
 	DrawWrapper(u16 X, u16 Y) : InputObject(X,Y) {}
 };
 
+struct MiscDrawWrapper : public DrawWrapper
+{
+	std::function<void(size_t)> onRealign;
+	void realign(size_t start = 0) override
+	{
+		if(onRealign)
+			onRealign(start);
+	}
+	virtual void add(shared_ptr<GUIObject> obj) override
+	{
+		DrawWrapper::add(obj);
+		realign(cont.size()-1);
+	}
+	MiscDrawWrapper() = default;
+};
+
 struct Column : public DrawWrapper
 {
 	u16 padding, spacing;
 	i8 align;
-	void realign(size_t start = 0);
+	void realign(size_t start = 0) override;
 	virtual u16 width() const override;
 	virtual u16 height() const override;
+	virtual u16 true_width() const override;
+	virtual u16 true_height() const override;
 	virtual void add(shared_ptr<GUIObject> obj) override;
 	Column() : padding(0), spacing(2), align(ALLEGRO_ALIGN_CENTRE) {};
 	Column(u16 X, u16 Y, u16 padding = 0,
@@ -254,9 +282,11 @@ struct Row : public DrawWrapper
 {
 	u16 padding, spacing;
 	i8 align;
-	void realign(size_t start = 0);
+	void realign(size_t start = 0) override;
 	virtual u16 width() const override;
 	virtual u16 height() const override;
+	virtual u16 true_width() const override;
+	virtual u16 true_height() const override;
 	virtual void add(shared_ptr<GUIObject> obj) override;
 	Row() : padding(4), spacing(2), align(ALLEGRO_ALIGN_CENTRE) {};
 	Row(u16 X, u16 Y, u16 padding = 4,
@@ -298,6 +328,8 @@ struct RadioButton : public InputObject
 	virtual u16 ypos() const override;
 	virtual u16 width() const override;
 	virtual u16 height() const override;
+	virtual u16 true_width() const override;
+	virtual u16 true_height() const override;
 	RadioButton() : text(), font(FontDef(-20, false, BOLD_NONE)),
 		radius(4)
 	{}
@@ -417,6 +449,8 @@ struct Label : public InputObject
 	//u16 ypos() const override; //add valign?
 	u16 width() const override;
 	u16 height() const override;
+	u16 true_width() const override;
+	u16 true_height() const override;
 	void tick() override;
 	
 	Label();
@@ -432,6 +466,7 @@ struct TextField : public InputObject
 	u16 cpos, cpos2; //cpos is cursor, cpos2 is anchor of selection
 	static const u16 pad = 2;
 	std::function<bool(string const&,string const&,char)> onValidate;
+	std::function<void(TextField&)> onUpdate;
 	std::function<bool()> onEnter;
 	
 	void draw() const override;
@@ -440,6 +475,10 @@ struct TextField : public InputObject
 	int get_int() const;
 	double get_double() const;
 	string get_str() const;
+	bool is_int() const;
+	bool is_uint() const;
+	bool is_double() const;
+	bool is_udouble() const;
 	
 	TextField() : InputObject(0,0,64,0), content(),
 		font(FontDef(-20, false, BOLD_NONE)), cpos(0), cpos2(0)
@@ -459,6 +498,7 @@ struct TextField : public InputObject
 	void key_event(ALLEGRO_EVENT const& ev) override;
 private:
 	bool validate(string& pastestr);
+	void update();
 	void cut();
 	void copy();
 	void paste();
