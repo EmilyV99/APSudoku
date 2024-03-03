@@ -2,6 +2,11 @@
 #include "GUI.hpp"
 #include "Font.hpp"
 
+constexpr double render_font_scale()
+{
+	return std::min(render_xscale,render_yscale);
+}
+
 FontDef fonts[NUM_FONTS];
 
 map<FontDef,ALLEGRO_FONT*> fontmap;
@@ -44,7 +49,7 @@ ALLEGRO_FONT* FontDef::gen() const
 		weightstr += "Italic";
 	string fontstr = "assets/font_opensans/OpenSans-"+weightstr+".ttf";
 	al_set_new_bitmap_flags(0);
-	ALLEGRO_FONT* f = al_load_ttf_font(fontstr.c_str(), render_yscale*height(), 0);
+	ALLEGRO_FONT* f = al_load_ttf_font(fontstr.c_str(), render_font_scale()*height(), 0);
 	fontmap[*this] = f;
 	return f;
 }
