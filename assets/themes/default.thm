@@ -1,0 +1,58 @@
+[Style]
+# % Fill between 0.5 and 1.0
+RadioButton Fill %=0.6
+CheckBox Fill %=0.6
+# Styles: 0=none, 1=under, 2=over
+Grid: Cursor 2 Style=2
+[Color]
+# Colors given as 0xRRGGBBAA
+General Background=0xC0C0C0FF
+Cell Selection=0x4CA4FFFF
+Focused Cell Cursor=0xFF5B4CFF
+Cell Background=0xFFFFFFFF
+Cell Border=0x808080FF
+Cell Entered Text=0x1E6BE5FF
+Cell Given Text=0x000000FF
+Region Border=0x000000FF
+Label Text=0x000000FF
+Label Disabled Text=0x808080FF
+Label Shadow=0x00000000
+Label Error Text=0xFF4444FF
+Label Error Shadow=0x00000000
+Button FG=0x000000FF
+Button BG=0xFFFFFFFF
+Button Hover BG=0xE0E0E0FF
+Button Border=0x000000FF
+Button Disabled FG=0x808080FF
+Button Disabled BG=0xC0C0C0FF
+RadioButton BG=0xFFFFFFFF
+RadioButton FG=0x000000FF
+RadioButton Disabled BG=0xC0C0C0FF
+RadioButton Disabled FG=0x808080FF
+RadioButton Hover BG=0xE0E0E0FF
+RadioButton Border=0x000000FF
+RadioButton Text=0x000000FF
+RadioButton Disabled Text=0x808080FF
+TextField BG=0xFFFFFFFF
+TextField FG=0x000000FF
+TextField Disabled BG=0xC0C0C0FF
+TextField Disabled FG=0x808080FF
+TextField Selected BG=0x0078D7FF
+TextField Selected FG=0xFFFFFFFF
+TextField Hover BG=0xE0E0E0FF
+TextField Border=0x000000FF
+TextField Cursor=0x000000FF
+TextField Selected Cursor=0xFFFFFFFF
+Shapes Mode Border=0x000000FF
+Shapes Mode Given BG=0xC0C0C0FF
+Shapes Mode User BG=0xFFFFFFFF
+Shapes Mode FG 1=0xFF0000FF
+Shapes Mode FG 2=0x00AA00FF
+Shapes Mode FG 3=0x0000FFFF
+Shapes Mode FG 4=0xFFFF00FF
+Shapes Mode FG 5=0xFF00FFFF
+Shapes Mode FG 6=0x00FFFFFF
+Shapes Mode FG 7=0xB400FFFF
+Shapes Mode FG 8=0xFFA000FF
+Shapes Mode FG 9=0xBEFF00FF
+#
