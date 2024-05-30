@@ -20,6 +20,12 @@ struct FontDef : public tuple<i16,bool,Bold> // A definition of a font
 	Bold& weight() {return std::get<2>(*this);}
 	Bold const& weight() const {return std::get<2>(*this);}
 	
+	u16 pix_height() const
+	{
+		assert(height() < 0);
+		return -height();
+	}
+	
 	FontDef(i16 h = -20, bool ital = false, Bold b = BOLD_NONE);
 	ALLEGRO_FONT* get() const;
 	ALLEGRO_FONT* gen() const;

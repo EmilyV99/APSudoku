@@ -105,6 +105,7 @@ enum Difficulty
 	DIFF_EASY,
 	DIFF_NORMAL,
 	DIFF_HARD,
+	DIFF_KILLER,
 	NUM_DIFF
 };
 extern Difficulty diff;

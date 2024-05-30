@@ -43,6 +43,7 @@ namespace Sudoku
 	{
 		static int sel_style;
 		Cell cells[9*9];
+		vector<set<u8>> cages;
 		std::function<void(Grid&)> onExit;
 		
 		Cell* get(u8 row, u8 col);
@@ -73,9 +74,10 @@ namespace Sudoku
 		
 		Grid(u16 X, u16 Y);
 	private:
+		u8 cage_sum(u8 indx, bool target = true) const;
 		set<Cell*> selected;
 		Cell* focus_cell;
-		bool _invalid;
+		bool _invalid = false, _active = false;
 	};
 }
 

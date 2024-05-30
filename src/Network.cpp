@@ -269,6 +269,10 @@ void grant_hint()
 			basic = 20;
 			prog = 80;
 			break;
+		case DIFF_KILLER:
+			basic = 40;
+			prog = 60;
+			break;
 	}
 	if(missing_basic.empty())
 		basic = 0;

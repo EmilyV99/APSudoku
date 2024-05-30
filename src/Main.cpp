@@ -370,8 +370,38 @@ void build_gui()
 	{ // Difficulty / game buttons
 		shared_ptr<Column> diff_column = make_shared<Column>(BUTTON_X,GRID_Y,0,2,ALLEGRO_ALIGN_LEFT);
 		
+		shared_ptr<Row> diff_row = make_shared<Row>(0,0,0,0,ALLEGRO_ALIGN_RIGHT);
+		
 		shared_ptr<Label> diff_lbl = make_shared<Label>("Difficulty:", font_s, ALLEGRO_ALIGN_LEFT);
-		diff_column->add(diff_lbl);
+		diff_row->add(diff_lbl);
+		
+		log(format("{}", font_s.height()));
+		shared_ptr<Button> diffhelp = make_shared<Button>("?", font_l, 0, 0, CELL_SZ, font_s.pix_height());
+		diffhelp->onMouse = [](InputObject& ref,MouseEvent e)
+			{
+				switch(e)
+				{
+					case MOUSE_LCLICK:
+					{
+						ref.flags |= FL_SELECTED;
+						pop_inf("How to Play",
+							"Fill every Row, Column, and outlined Region (3x3 box) with the digits 1-9, exactly once each."
+							"\nName: # Givens, progression hint %"
+							"\nEasy: 46, 10%"
+							"\nNormal: 35, 40%"
+							"\nHard: 26, 80%"
+							"\nKiller*: 26, 60%"
+							"\n* In 'Killer' mode, outlined Cages must sum to the indicated total.",
+							CANVAS_W*0.75);
+						ref.flags &= ~FL_SELECTED;
+						break;
+					}
+				}
+				return ref.handle_ev(e);
+			};
+		diff_row->add(diffhelp);
+		
+		diff_column->add(diff_row);
 		
 		difficulty = make_shared<RadioSet>(
 			[](){return diff;},
@@ -380,8 +410,8 @@ void build_gui()
 				if(v)
 					diff = Difficulty(*v);
 			},
-			vector<string>({"Easy","Normal","Hard"}),
-			FontDef(-20, false, BOLD_NONE));
+			vector<string>({"Easy","Normal","Hard","Killer"}),
+			FontDef(-15, false, BOLD_NONE));
 		difficulty->select(1);
 		difficulty->dis_proc = [](GUIObject const& ref) -> bool
 			{

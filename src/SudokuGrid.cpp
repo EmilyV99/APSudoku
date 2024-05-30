@@ -279,6 +279,7 @@ namespace Sudoku
 	}
 	bool Grid::check()
 	{
+		if(!active()) return false;
 		bool ret = true;
 		for(Cell const& c : cells)
 			if(c.solution != c.val)
@@ -345,8 +346,7 @@ namespace Sudoku
 	}
 	void Grid::exit()
 	{
-		for(Cell& c : cells)
-			c.solution = 0;
+		_active = false;
 		if(onExit)
 			onExit(*this);
 	}
@@ -395,6 +395,67 @@ namespace Sudoku
 				W = CELL_SZ*3, H = CELL_SZ*3;
 			scale_pos(X,Y,W,H);
 			al_draw_rectangle(X, Y, X+W-1, Y+H-1, Color(C_REGION_BORDER), 2);
+		}
+		for(u8 cindx = 0; cindx < cages.size(); ++cindx) // cage borders/sums
+		{
+			auto& cage = cages[cindx];
+			assert(!cage.empty());
+			optional<u8> ul;
+			static const u8 CAGE_PAD = 2;
+			for(u8 q : cage)
+			{
+				if(!ul) ul = q; //top-left cell
+				u8 borders = 0;
+				if(q-9 < 0 || !cage.contains(q-9))
+					borders |= 1<<DIR_UP;
+				if(q+9 >= 81 || !cage.contains(q+9))
+					borders |= 1<<DIR_DOWN;
+				if(!(q%9) || !cage.contains(q-1))
+					borders |= 1<<DIR_LEFT;
+				if(q%9==8 || !cage.contains(q+1))
+					borders |= 1<<DIR_RIGHT;
+				if(borders)
+				{
+					u16 X = x + ((q%9)*CELL_SZ) + CAGE_PAD,
+						Y = y + ((q/9)*CELL_SZ) + CAGE_PAD,
+						W = CELL_SZ - CAGE_PAD*2, H = CELL_SZ - CAGE_PAD*2;
+					scale_pos(X,Y,W,H);
+					
+					u16 X2 = X+W/3, X3 = X2+W/3, X4 = X+W-1;
+					u16 Y2 = Y+H/3, Y3 = Y2+H/3, Y4 = Y+H-1;
+					
+					Color dashcol = C_CAGE_BORDER;
+					if(borders & (1<<DIR_UP))
+					{
+						al_draw_line(X, Y, X2, Y, dashcol, 0);
+						al_draw_line(X3, Y, X4, Y, dashcol, 0);
+					}
+					if(borders & (1<<DIR_DOWN))
+					{
+						al_draw_line(X, Y4, X2, Y4, dashcol, 0);
+						al_draw_line(X3, Y4, X4, Y4, dashcol, 0);
+					}
+					if(borders & (1<<DIR_LEFT))
+					{
+						al_draw_line(X, Y, X, Y2, dashcol, 0);
+						al_draw_line(X, Y3, X, Y4, dashcol, 0);
+					}
+					if(borders & (1<<DIR_RIGHT))
+					{
+						al_draw_line(X4, Y, X4, Y2, dashcol, 0);
+						al_draw_line(X4, Y3, X4, Y4, dashcol, 0);
+					}
+				}
+			}
+			u8 q = *ul;
+			{
+				u16 X = x + ((q%9)*CELL_SZ) + CAGE_PAD,
+					Y = y + ((q/9)*CELL_SZ) + CAGE_PAD;
+				scale_pos(X,Y);
+				string text = to_string(cage_sum(cindx));
+				ALLEGRO_FONT* f = fonts[FONT_MARKING8].get();
+				al_draw_text(f, Color(C_CAGE_SUM), X, Y, ALLEGRO_ALIGN_LEFT, text.c_str());
+			}
 		}
 		if(sel_style == STYLE_UNDER) DRAW_FOCUS()
 		for(u8 q = 0; q < 9*9; ++q) // Selected cell highlights
@@ -506,7 +567,7 @@ namespace Sudoku
 	
 	bool Grid::active() const
 	{
-		return cells[0].solution != 0;
+		return _active;
 	}
 	bool Grid::has_invalid() const
 	{
@@ -515,7 +576,8 @@ namespace Sudoku
 	void Grid::generate(Difficulty d)
 	{
 		_invalid = false;
-		auto vec = PuzzleGen::gen_puzzle(diff);
+		auto puz = PuzzleGen::gen_puzzle(diff);
+		auto& vec = puz.cells;
 		for(u8 q = 0; q < 9*9; ++q)
 		{
 			Sudoku::Cell& c = cells[q];
@@ -529,6 +591,19 @@ namespace Sudoku
 			}
 			else c.flags &= ~CFL_GIVEN;
 		}
+		cages.swap(puz.cages);
+		_active = true;
+	}
+	
+	u8 Grid::cage_sum(u8 indx, bool target) const
+	{
+		if(indx >= cages.size())
+			return 0;
+		auto& cage = cages[indx];
+		u8 sum = 0;
+		for(u8 q : cage)
+			sum += target ? cells[q].solution : cells[q].val;
+		return sum;
 	}
 	
 	void Grid::enter(u8 val)

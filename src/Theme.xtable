@@ -37,6 +37,8 @@ X(             "TextField Hover BG",               TF_HOVBG,           C_LLGRAY 
 X(               "TextField Border",              TF_BORDER,            C_BLACK )
 X(               "TextField Cursor",              TF_CURSOR,            C_BLACK )
 X(      "TextField Selected Cursor",          TF_SEL_CURSOR,            C_WHITE )
+X(             "Killer Cage Border",            CAGE_BORDER,         0xFF00FFFF )
+X(                "Killer Cage Sum",               CAGE_SUM,         0x0000FFFF )
  //For "Use Colors" mode
 X(             "Shapes Mode Border",          SHAPES_BORDER,            C_BLACK )
 X(           "Shapes Mode Given BG",        SHAPES_GIVEN_BG,            C_LGRAY )
