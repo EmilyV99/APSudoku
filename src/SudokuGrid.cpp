@@ -679,8 +679,6 @@ namespace Sudoku
 						if(optional<u8> o_ind = find(focus_cell))
 						{
 							u8 ind = *o_ind;
-							if(!shift)
-								deselect();
 							switch(ev.keyboard.keycode)
 							{
 								case ALLEGRO_KEY_UP: case ALLEGRO_KEY_W:
@@ -688,7 +686,7 @@ namespace Sudoku
 										ind -= 9;
 									break;
 								case ALLEGRO_KEY_DOWN: case ALLEGRO_KEY_S:
-									if(ind <= 9*9-9)
+									if(ind < 9*9-9)
 										ind += 9;
 									break;
 								case ALLEGRO_KEY_LEFT: case ALLEGRO_KEY_A:
@@ -700,7 +698,12 @@ namespace Sudoku
 										++ind;
 									break;
 							}
-							select(&cells[ind]);
+							if(ind < CELL_COUNT)
+							{
+								if(!shift)
+									deselect();
+								select(&cells[ind]);
+							}
 						}
 						break;
 					case ALLEGRO_KEY_TAB:

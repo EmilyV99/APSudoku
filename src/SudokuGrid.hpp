@@ -41,8 +41,9 @@ namespace Sudoku
 	};
 	struct Grid : public InputObject
 	{
+		static const u8 CELL_COUNT = 9*9;
 		static int sel_style;
-		Cell cells[9*9];
+		Cell cells[CELL_COUNT];
 		vector<set<u8>> cages;
 		std::function<void(Grid&)> onExit;
 		
