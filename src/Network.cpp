@@ -111,6 +111,17 @@ static void on_connect_err(string err)
 {
 	connect_error->text = err;
 }
+static void on_preconnect(AP_RoomInfo const& ri)
+{
+	if(ri.version.major <= 0 && ri.version.minor < 5) // <0.5.x
+	{
+		// Older versions didn't recognize the 'HintGame' tag, so need the 'Tracker' tag added to be allowed to connect to any slot!
+		set<string> tags = AP_GetTags();
+		tags.insert("Tracker");
+		AP_SetTags(tags);
+	}
+	log(format("\t with tags: {}", set_string(AP_GetTags())));
+}
 static void on_connected()
 {
 	set<i64> const& locs = AP_GetMissingLocations();
@@ -211,16 +222,15 @@ void do_ap_connect(string const& _ip, string const& _port,
 	AP_Init(ip_port.c_str(), "", slot.c_str(), pwd.c_str());
 	AP_SetDeathLinkForced(deathlink.has_value());
 	AP_SetDeathAmnestyForced(deathlink.value_or(0));
-	set<string> tags = {"Tracker","HintGame","APSudoku"};
+	set<string> tags = {"HintGame","APSudoku"};
 	AP_SetTags(tags);
-	
-	log(format("\t with tags: {}", set_string(AP_GetTags())));
 	
 	AP_SetItemClearCallback(on_item_clear);
 	AP_SetItemRecvCallback(on_item_receive);
 	AP_SetLocationCheckedCallback(on_location_checked);
 	AP_SetDeathLinkRecvCallback(on_death_recv);
 	AP_SetLocationInfoCallback(nullptr);
+	AP_SetPreConnectCallback(on_preconnect);
 	AP_SetConnectedCallback(on_connected);
 	AP_OnConnectError(on_connect_err);
 	AP_Start();

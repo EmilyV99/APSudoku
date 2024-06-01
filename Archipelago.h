@@ -13,6 +13,8 @@ bool AP_IsInit();
 
 void AP_Start();
 
+struct AP_RoomInfo;
+
 struct AP_NetworkVersion {
 	int major;
 	int minor;
@@ -67,6 +69,8 @@ void AP_SetDeathLinkRecvCallback(std::function<void(std::string,std::string)> pr
 
 void AP_SetLoggingCallback(std::function<void(std::string const&)> proc);
 void AP_SetLoggingErrorCallback(std::function<void(std::string const&)> proc);
+// Called before sending 'Connect' packet
+void AP_SetPreConnectCallback(std::function<void(AP_RoomInfo const&)>);
 // Called on 'Connected'
 void AP_SetConnectedCallback(std::function<void()>);
 // Called with an error message if a connection error occurs

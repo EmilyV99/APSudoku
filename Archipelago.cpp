@@ -74,6 +74,7 @@ void (*recvdeath)() = nullptr;
 void (*setreplyfunc)(AP_SetReply) = nullptr;
 std::function<void(std::string,std::string)> recvdeath2;
 std::function<void()> onConnectedFunc;
+std::function<void(AP_RoomInfo const&)> preConnectFunc;
 std::function<void(std::string)> onConnectErrFunc;
 std::function<void(std::string)> onLogMessage;
 std::function<void(std::string)> onErrMessage;
@@ -510,6 +511,10 @@ void AP_SetConnectedCallback(std::function<void()> proc)
 {
 	onConnectedFunc = proc;
 }
+void AP_SetPreConnectCallback(std::function<void(AP_RoomInfo const&)> proc)
+{
+	preConnectFunc = proc;
+}
 void AP_OnConnectError(std::function<void(std::string)> proc)
 {
 	onConnectErrFunc = proc;
@@ -712,6 +717,9 @@ bool parse_response(std::string msg, std::string &request) {
 			lib_room_info.time = root[i]["time"].asFloat();
 
 			if (!auth) {
+				AP_Log(std::format("AP Version: {}.{}.{}", lib_room_info.version.major, lib_room_info.version.minor, lib_room_info.version.build));
+				if(preConnectFunc)
+					preConnectFunc(lib_room_info);
 				Json::Value req_t;
 				ap_uuid = rando();
 				req_t[0]["cmd"] = "Connect";
