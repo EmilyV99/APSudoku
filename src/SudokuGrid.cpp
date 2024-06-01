@@ -342,6 +342,7 @@ namespace Sudoku
 			exit();
 		for(Cell& c : cells)
 			c.clear();
+		cages.clear();
 		_invalid = false;
 	}
 	void Grid::exit()
