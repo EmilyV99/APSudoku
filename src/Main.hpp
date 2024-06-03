@@ -1,5 +1,13 @@
 #pragma once
 
+#ifdef _WIN32
+#include <format>
+using std::format;
+#else
+#include <fmt/format.h>
+using fmt::format;
+#endif
+
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_font.h>
@@ -12,7 +20,6 @@
 #include <deque>
 #include <set>
 #include <string>
-#include <format>
 #include <optional>
 #include <functional>
 #include <memory>
@@ -20,6 +27,7 @@
 #include <stdint.h>
 #include <iostream>
 #include <sstream>
+#include <iomanip>
 #include <chrono>
 #include <random>
 typedef int8_t i8;
@@ -44,7 +52,6 @@ using std::optional;
 using std::nullopt;
 using std::shared_ptr;
 using std::make_shared;
-using std::format;
 
 extern std::mt19937 rng;
 u64 rand(u64 range);
