@@ -1,7 +1,6 @@
 #include "Main.hpp"
 #include "GUI.hpp"
 #include "PuzzleGen.hpp"
-#include <sstream>
 #include <thread>
 #include <mutex>
 
