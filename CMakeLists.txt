@@ -139,7 +139,7 @@ add_custom_command(TARGET APSudoku POST_BUILD
 		"$<TARGET_FILE_DIR:APSudoku>/allegro_primitives-5.2.dll"
 		"$<TARGET_FILE_DIR:APSudoku>/allegro_ttf-5.2.dll"
 		"$<TARGET_FILE_DIR:APSudoku>/allegro-5.2.dll"
-		"$<TARGET_FILE_DIR:APSudoku>/APCpp.dll"
+		"$<TARGET_FILE_DIR:APCpp>/APCpp.dll"
 		"$<TARGET_FILE:APSudoku>"
 			"${CMAKE_BINARY_DIR}/out_$<CONFIG>"
 	COMMENT "Packaging output")
