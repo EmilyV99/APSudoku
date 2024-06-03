@@ -1,37 +1,40 @@
 name: CI
 
 # Trigger this workflow on push or pull request
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
-  build-win:
-    name: Build (windows-latest)
+    build-win:
+        name: Build (windows-latest)
 
-    runs-on: windows-latest
+        runs-on: windows-latest
 
-    steps:
-    - uses: actions/checkout@v1
-      with:
-        submodules: 'recursive'
-    - name: CMake configure (default version)
-      run: |
-        mkdir build
-        cd build
-        cmake -G "Visual Studio 17 2022" -A Win32 `
-              -DUSE_ZLIB=OFF `
-              -DCMAKE_BUILD_TYPE=Release ..
-    - name: Build (default version)
-      run: |
-        cd build
-        cmake --build . --config Release
-    - name: Create Artifact Folder
-      run: |
-        mkdir artifact
-        copy build/Release/APCpp.dll artifact
-        copy build/Release/APCpp.lib artifact
-    - name: Create Build Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: APCpp-win
-        path: |
-          artifact/*
+        steps:
+            - uses: actions/checkout@v1
+              with:
+                submodules: 'recursive'
+            - name: CMake configure
+              run: |
+                    ./initialize.bat
+            - name: Build
+              run: |
+                    cd build
+                    cmake --build . --config Release
+            - name: Package
+              shell: python
+              run: |
+                    import shutil
+                    from pathlib import Path
+                    
+                    path: Path = Path.cwd() / 'build' / 'out_Release'
+                    dest: Path = Path.cwd() / 'artifacts' / 'APSudoku_Win_x64'
+                    
+                    shutil.make_archive(
+                        base_name = dest,
+                        format = 'zip',
+                        root_dir = path
+                        )
+            - uses: actions/upload-artifact@v4
+              with:
+                name: win_x64_output
+                path: 'artifacts/*'

@@ -13,4 +13,3 @@ xcopy "./AllegroDeps/build/native/v143/x64/deps/lib" "./lib" /E /I /Q /Y
 cd %~dp0/build
 echo Running CMake:
 cmake .. -DWIN32=1
-pause
