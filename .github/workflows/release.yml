@@ -1,0 +1,67 @@
+name: Release
+
+on:
+    workflow_dispatch:
+        inputs:
+            release-name:
+                type: string
+                description: English Name of the release
+            release-tag:
+                type: string
+                description: Tag name of the release (ex 'v1.0.0')
+            prerelease:
+                type: boolean
+
+jobs:
+    build-win:
+        name: Build (windows-latest)
+
+        runs-on: windows-latest
+
+        steps:
+            - uses: actions/checkout@v1
+              with:
+                submodules: 'recursive'
+            - name: CMake configure
+              run: |
+                    ./initialize.bat
+            - name: Build
+              run: |
+                    cd build
+                    cmake --build . --config Release
+            - name: Package
+              shell: python
+              run: |
+                    import shutil
+                    from pathlib import Path
+                    
+                    path: Path = Path.cwd() / 'build' / 'out_Release'
+                    dest: Path = Path.cwd() / 'artifacts' / 'APSudoku_Win_x64'
+                    
+                    shutil.make_archive(
+                        base_name = dest,
+                        format = 'zip',
+                        root_dir = path
+                        )
+            - uses: actions/upload-artifact@v4
+              with:
+                name: win_x64_output
+                path: 'artifacts/*'
+    publish:
+        needs: ["build-win"]
+        #if: always() && contains(needs.*.result, 'success') #uncomment to release despite failures on some platforms
+        runs-on: windows-latest
+        steps:
+            - uses: actions/download-artifact@v4
+              with:
+                path: packages
+            - name: Release
+              uses: softprops/action-gh-release@v1
+              with:
+                name: ${{ github.event.inputs.release-name }}
+                tag_name: ${{ github.event.inputs.release-tag }}
+                target_commitish: ${{ github.sha }}
+                files: packages/*/*
+                prerelease: ${{ github.event.inputs.prerelease }}
+                fail_on_unmatched_files: true
+                generate_release_notes: true
