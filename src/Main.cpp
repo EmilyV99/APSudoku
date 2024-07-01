@@ -375,7 +375,6 @@ void build_gui()
 		shared_ptr<Label> diff_lbl = make_shared<Label>("Difficulty:", font_s, ALLEGRO_ALIGN_LEFT);
 		diff_row->add(diff_lbl);
 		
-		log(format("{}", font_s.height()));
 		shared_ptr<Button> diffhelp = make_shared<Button>("?", font_l, 0, 0, CELL_SZ, font_s.pix_height());
 		diffhelp->onMouse = [](InputObject& ref,MouseEvent e)
 			{
