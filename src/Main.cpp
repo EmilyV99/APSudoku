@@ -62,7 +62,7 @@ Hint::operator string() const
 	return format("{} {} '{}'{} for {} at '{}'",
 		ap_get_playername(finding_player),
 		found ? "found" : "will find",
-		ap_get_itemname(item), *flagstr,
+		ap_get_itemname(receiving_player, item), *flagstr,
 		ap_get_playername(receiving_player),
 		ap_get_locationname(location));
 }
