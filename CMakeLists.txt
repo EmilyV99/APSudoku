@@ -174,4 +174,3 @@ if (UNIX AND NOT APPLE)
 				"${CMAKE_BINARY_DIR}/out_$<CONFIG>"
 		COMMENT "Packaging output\n")
 endif (UNIX AND NOT APPLE)
-

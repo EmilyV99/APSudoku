@@ -307,25 +307,36 @@ void grant_hint()
 	log("Exiting 'grant_hint()'", true);
 }
 
-
+AP_NetworkPlayer const* ap_get_player(int playerid)
+{
+	auto& pmap = AP_GetPlayerMap();
+	auto it = pmap.find(playerid);
+	if(it != pmap.end())
+		return &(it->second);
+	return nullptr;
+}
 string ap_get_playername(int playerid)
 {
 	if(playerid == AP_GetPlayerID())
 		return "You";
-	auto& pmap = AP_GetPlayerMap();
-	auto it = pmap.find(playerid);
-	if(it != pmap.end())
-		return it->second.name_or_alias();
-	return "";
+	if(auto player = ap_get_player(playerid))
+		return player->name_or_alias();
+	return "UNKNOWN PLAYER";
 }
-string ap_get_itemname(int itemid)
+string ap_get_itemname(int playerid, int itemid)
 {
-	for(auto [p,id] : AP_GetItemMap())
+	auto player = ap_get_player(playerid);
+	if(player)
 	{
-		auto [s,v] = p;
-		if(v != itemid)
-			continue;
-		return id;
+		for(auto [p,item_name] : AP_GetItemMap())
+		{
+			auto [game_name,value] = p;
+			if(value != itemid)
+				continue;
+			if(game_name != player->game)
+				continue;
+			return item_name;
+		}
 	}
 	error(format("Itemname lookup failed for item ID {}",itemid));
 	return "";

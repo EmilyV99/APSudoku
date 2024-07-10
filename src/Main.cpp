@@ -62,7 +62,7 @@ Hint::operator string() const
 	return format("{} {} '{}'{} for {} at '{}'",
 		ap_get_playername(finding_player),
 		found ? "found" : "will find",
-		ap_get_itemname(item), *flagstr,
+		ap_get_itemname(receiving_player, item), *flagstr,
 		ap_get_playername(receiving_player),
 		ap_get_locationname(location));
 }
@@ -375,7 +375,6 @@ void build_gui()
 		shared_ptr<Label> diff_lbl = make_shared<Label>("Difficulty:", font_s, ALLEGRO_ALIGN_LEFT);
 		diff_row->add(diff_lbl);
 		
-		log(format("{}", font_s.height()));
 		shared_ptr<Button> diffhelp = make_shared<Button>("?", font_l, 0, 0, CELL_SZ, font_s.pix_height());
 		diffhelp->onMouse = [](InputObject& ref,MouseEvent e)
 			{

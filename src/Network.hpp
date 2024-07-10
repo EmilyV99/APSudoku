@@ -17,6 +17,6 @@ bool ap_deathlink();
 
 void grant_hint();
 string ap_get_playername(int playerid);
-string ap_get_itemname(int itemid);
+string ap_get_itemname(int playerid, int itemid);
 optional<string> ap_get_itemflagstr(int itemflags);
 string ap_get_locationname(int locid);

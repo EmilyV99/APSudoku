@@ -97,7 +97,7 @@ jobs:
                 name: ${{ github.event.inputs.release-name }}
                 tag_name: ${{ github.event.inputs.release-tag }}
                 target_commitish: ${{ github.sha }}
-                files: packages/*
+                files: packages/*/*
                 prerelease: ${{ github.event.inputs.prerelease }}
                 fail_on_unmatched_files: true
                 generate_release_notes: true
