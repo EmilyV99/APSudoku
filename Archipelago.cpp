@@ -222,9 +222,9 @@ void AP_Init(const char* ip, const char* game, const char* player_name, const ch
 
 	if (!strcmp(ip,"")) {
 		ip = "archipelago.gg:38281";
-		AP_Log(std::format("Using default Server Address: '{}'", ip));
+		AP_Log(format("Using default Server Address: '{}'", ip));
 	} else {
-		AP_Log(std::format("Using Server Address: '{}'", ip));
+		AP_Log(format("Using Server Address: '{}'", ip));
 	}
 	ap_ip = ip;
 	ap_game = game;
@@ -265,7 +265,7 @@ void AP_Init(const char* ip, const char* game, const char* player_name, const ch
 					itr->second->status = AP_RequestStatus::Error;
 					itr = map_server_data.erase(itr);
 				}
-				AP_Error(std::format("Error connecting to Archipelago. Retries: {}", msg->errorInfo.retries));
+				AP_Error(format("Error connecting to Archipelago. Retries: {}", msg->errorInfo.retries));
 				if (isSSL)
 				{
 					webSocket.setUrl("ws://" + ap_ip);
@@ -368,7 +368,7 @@ void AP_SendItem(int64_t idx) {
 }
 void AP_SendItem(std::set<int64_t> const& locations) {
 	for (int64_t idx : locations) {
-		AP_Log(std::format("Checked '{}'.", getLocationName(ap_game, idx).c_str()));
+		AP_Log(format("Checked '{}'.", getLocationName(ap_game, idx).c_str()));
 	}
 	if (multiworld) {
 		Json::Value req_t;
@@ -717,7 +717,7 @@ bool parse_response(std::string msg, std::string &request) {
 			lib_room_info.time = root[i]["time"].asFloat();
 
 			if (!auth) {
-				AP_Log(std::format("AP Version: {}.{}.{}", lib_room_info.version.major, lib_room_info.version.minor, lib_room_info.version.build));
+				AP_Log(format("AP Version: {}.{}.{}", lib_room_info.version.major, lib_room_info.version.minor, lib_room_info.version.build));
 				if(preConnectFunc)
 					preConnectFunc(lib_room_info);
 				Json::Value req_t;
@@ -811,7 +811,7 @@ bool parse_response(std::string msg, std::string &request) {
 			// Get datapackage for outdated games
 			for (std::pair<std::string,std::string> game_pkg : info.datapackage_checksums) {
 				if (datapkg_cache.get("games", Json::objectValue).get(game_pkg.first, Json::objectValue).get("checksum", "_None") != game_pkg.second) {
-					AP_Log(std::format("Cache outdated for game: {}", game_pkg.first.c_str()));
+					AP_Log(format("Cache outdated for game: {}", game_pkg.first.c_str()));
 					datapkg_outdated_games.insert(game_pkg.first);
 				}
 			}
@@ -1066,7 +1066,7 @@ void parseDataPkg(Json::Value new_datapkg) {
 		Json::Value game_data = new_datapkg["games"][game];
 		datapkg_cache["games"][game] = game_data;
 		datapkg_outdated_games.erase(game);
-		AP_Log(std::format("Game Cache updated for {}", game.c_str()));
+		AP_Log(format("Game Cache updated for {}", game.c_str()));
 	}
 	WriteFileJSON(datapkg_cache, datapkg_cache_path);
 	parseDataPkg();

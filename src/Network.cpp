@@ -29,7 +29,7 @@ static size_t hint_count()
 }
 static void update_hint_str()
 {
-	hints_left->text = std::format("Hints Remaining: {}",hint_count());
+	hints_left->text = format("Hints Remaining: {}",hint_count());
 }
 static void check_location(int loc)
 {
@@ -79,7 +79,7 @@ static void read_hint_data(bool popup)
 		return;
 	}
 	log("...loaded, parsing...", true);
-	
+
 	string slotgame = AP_GetSlotGame();
 	string const& val = *((string*)(req.value));
 	Json::Value data;
@@ -262,7 +262,7 @@ void grant_hint()
 		pop_inf("Hinted Out!","Nothing left to hint for this slot!");
 		return;
 	}
-	
+
 	log("attempting to unlock hint...", true);
 	int basic = 0, prog = 0;
 	switch(diff)
@@ -301,7 +301,7 @@ void grant_hint()
 	Hint h(item);
 	clog(h,build_ccode(LOG_FG_YELLOW));
 	pop_inf("Hint Earned:",
-		std::format("{}\n{} hints remaining to earn.", string(h), hint_count()),
+		format("{}\n{} hints remaining to earn.", string(h), hint_count()),
 		CANVAS_W*0.8);
 	update_hint_str();
 	log("Exiting 'grant_hint()'", true);
@@ -338,7 +338,7 @@ string ap_get_itemname(int playerid, int itemid)
 			return item_name;
 		}
 	}
-	error(std::format("Itemname lookup failed for item ID {}",itemid));
+	error(format("Itemname lookup failed for item ID {}",itemid));
 	return "";
 }
 optional<string> ap_get_itemflagstr(int itemflags)

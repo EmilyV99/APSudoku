@@ -7,6 +7,14 @@
 #include <set>
 #include <functional>
 
+#ifdef _WIN32
+#include <format>
+using std::format;
+#else
+#include <fmt/format.h>
+using fmt::format;
+#endif
+
 void AP_Init(const char*, const char*, const char*, const char*);
 void AP_Init(const char*);
 bool AP_IsInit();

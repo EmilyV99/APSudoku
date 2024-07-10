@@ -12,30 +12,32 @@ add_library(APCpp SHARED Archipelago.cpp Archipelago.h)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 
-# Point to the dependencies
-set(ALLEG_DEPS_INCLUDE "${CMAKE_BINARY_DIR}/allegro5/deps/include/")
-set(ALLEG_DEPS_LIBS "${CMAKE_BINARY_DIR}/allegro5/deps/lib/")
+# Point to the dependencies installed by the build script
+if (WIN32)
+	set(ALLEG_DEPS_INCLUDE "${CMAKE_BINARY_DIR}/allegro5/deps/include/")
+	set(ALLEG_DEPS_LIBS "${CMAKE_BINARY_DIR}/allegro5/deps/lib/")
 
-set(ZLIB_LIBRARY "${ALLEG_DEPS_LIBS}/zlib.lib" CACHE STRING "" FORCE)
-set(ZLIB_INCLUDE_DIR "${ALLEG_DEPS_INCLUDE}" CACHE STRING "" FORCE)
-set(PNG_LIBRARY "${ALLEG_DEPS_LIBS}/libpng16.lib" CACHE STRING "" FORCE)
-set(PNG_PNG_INCLUDE_DIR "${ALLEG_DEPS_INCLUDE}/libpng16" CACHE STRING "" FORCE)
-set(JPEG_LIBRARY "${ALLEG_DEPS_LIBS}/jpeg.lib" CACHE STRING "" FORCE)
-set(JPEG_INCLUDE_DIR "${ALLEG_DEPS_INCLUDE}" CACHE STRING "" FORCE)
-set(FREETYPE_LIBRARY "${ALLEG_DEPS_LIBS}/freetype.lib" CACHE STRING "" FORCE)
-set(FREETYPE_INCLUDE_DIRS "${ALLEG_DEPS_INCLUDE}/freetype2/freetype" CACHE STRING "" FORCE)
-set(FREETYPE_INCLUDE_DIR_freetype2 "${ALLEG_DEPS_INCLUDE}/freetype2/freetype" CACHE STRING "" FORCE)
-set(FREETYPE_INCLUDE_DIR_ft2build "${ALLEG_DEPS_INCLUDE}/freetype2" CACHE STRING "" FORCE)
-set(FREETYPE_ZLIB ON CACHE BOOL "" FORCE)
-set(FREETYPE_PNG ON CACHE BOOL "" FORCE)
-set(FREETYPE_BZIP2 OFF CACHE BOOL "" FORCE)
-set(OGG_LIBRARY "${ALLEG_DEPS_LIBS}/ogg.lib" CACHE STRING "" FORCE)
-set(OGG_INCLUDE_DIR "${ALLEG_DEPS_INCLUDE}" CACHE STRING "" FORCE)
-set(FLAC_LIBRARY "${ALLEG_DEPS_LIBS}/FLAC.lib" CACHE STRING "" FORCE)
-set(FLAC_INCLUDE_DIR "${ALLEG_DEPS_INCLUDE}" CACHE STRING "" FORCE)
-set(DUMB_LIBRARY "${ALLEG_DEPS_LIBS}/dumb.lib" CACHE STRING "" FORCE)
-set(DUMB_INCLUDE_DIR "${ALLEG_DEPS_INCLUDE}" CACHE STRING "" FORCE)
-set(MINIMP3_INCLUDE_DIRS "${ALLEG_DEPS_INCLUDE}" CACHE STRING "" FORCE)
+	set(ZLIB_LIBRARY "${ALLEG_DEPS_LIBS}/zlib.lib" CACHE STRING "" FORCE)
+	set(ZLIB_INCLUDE_DIR "${ALLEG_DEPS_INCLUDE}" CACHE STRING "" FORCE)
+	set(PNG_LIBRARY "${ALLEG_DEPS_LIBS}/libpng16.lib" CACHE STRING "" FORCE)
+	set(PNG_PNG_INCLUDE_DIR "${ALLEG_DEPS_INCLUDE}/libpng16" CACHE STRING "" FORCE)
+	set(JPEG_LIBRARY "${ALLEG_DEPS_LIBS}/jpeg.lib" CACHE STRING "" FORCE)
+	set(JPEG_INCLUDE_DIR "${ALLEG_DEPS_INCLUDE}" CACHE STRING "" FORCE)
+	set(FREETYPE_LIBRARY "${ALLEG_DEPS_LIBS}/freetype.lib" CACHE STRING "" FORCE)
+	set(FREETYPE_INCLUDE_DIRS "${ALLEG_DEPS_INCLUDE}/freetype2/freetype" CACHE STRING "" FORCE)
+	set(FREETYPE_INCLUDE_DIR_freetype2 "${ALLEG_DEPS_INCLUDE}/freetype2/freetype" CACHE STRING "" FORCE)
+	set(FREETYPE_INCLUDE_DIR_ft2build "${ALLEG_DEPS_INCLUDE}/freetype2" CACHE STRING "" FORCE)
+	set(FREETYPE_ZLIB ON CACHE BOOL "" FORCE)
+	set(FREETYPE_PNG ON CACHE BOOL "" FORCE)
+	set(FREETYPE_BZIP2 OFF CACHE BOOL "" FORCE)
+	set(OGG_LIBRARY "${ALLEG_DEPS_LIBS}/ogg.lib" CACHE STRING "" FORCE)
+	set(OGG_INCLUDE_DIR "${ALLEG_DEPS_INCLUDE}" CACHE STRING "" FORCE)
+	set(FLAC_LIBRARY "${ALLEG_DEPS_LIBS}/FLAC.lib" CACHE STRING "" FORCE)
+	set(FLAC_INCLUDE_DIR "${ALLEG_DEPS_INCLUDE}" CACHE STRING "" FORCE)
+	set(DUMB_LIBRARY "${ALLEG_DEPS_LIBS}/dumb.lib" CACHE STRING "" FORCE)
+	set(DUMB_INCLUDE_DIR "${ALLEG_DEPS_INCLUDE}" CACHE STRING "" FORCE)
+	set(MINIMP3_INCLUDE_DIRS "${ALLEG_DEPS_INCLUDE}" CACHE STRING "" FORCE)
+endif (WIN32)
 
 # Enable TLS. On Windows, build mbedTLS
 set(USE_TLS ON CACHE BOOL "Enable TLS support" FORCE)
@@ -101,6 +103,7 @@ if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
+# Compile allegro5 with options
 option(WANT_TESTS "" OFF)
 option(WANT_EXAMPLES "" OFF)
 option(WANT_DEMO "" OFF)
@@ -113,7 +116,14 @@ option(WANT_TTF "" ON)
 option(WANT_PRIMITIVES "" ON)
 
 add_subdirectory(allegro5)
+
+# Re-set config types, as allegro5 overrides this
 set(CMAKE_CONFIGURATION_TYPES Release Debug RelWithDebInfo CACHE STRING INTERNAL FORCE)
+
+# Set startup project for Visual Studio
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT APSudoku)
+
+# Target include directories / libraries
 target_include_directories(APSudoku PUBLIC
 	allegro5/include
 	build/allegro5/include
@@ -123,24 +133,44 @@ target_include_directories(APSudoku PUBLIC
 	allegro5/addons/color
 	allegro5/addons/ttf
 	)
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT APSudoku)
-
 target_link_libraries(APSudoku PUBLIC APCpp allegro allegro_main allegro_primitives allegro_font allegro_ttf)
-
-add_custom_command(TARGET APSudoku POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_directory
-		"${CMAKE_SOURCE_DIR}/assets" "$<TARGET_FILE_DIR:APSudoku>/assets"
-	COMMAND ${CMAKE_COMMAND} -E copy_directory
-		"${CMAKE_SOURCE_DIR}/assets" "${CMAKE_BINARY_DIR}/out_$<CONFIG>/assets"
-	COMMENT "Copying Assets")
-add_custom_command(TARGET APSudoku POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy
-		"$<TARGET_FILE_DIR:APSudoku>/allegro_font-5.2.dll"
-		"$<TARGET_FILE_DIR:APSudoku>/allegro_primitives-5.2.dll"
-		"$<TARGET_FILE_DIR:APSudoku>/allegro_ttf-5.2.dll"
-		"$<TARGET_FILE_DIR:APSudoku>/allegro-5.2.dll"
-		"$<TARGET_FILE_DIR:APCpp>/APCpp.dll"
-		"$<TARGET_FILE:APSudoku>"
-			"${CMAKE_BINARY_DIR}/out_$<CONFIG>"
-	COMMENT "Packaging output")
-	
+if (NOT WIN32)
+	target_link_libraries(APSudoku PUBLIC fmt)
+endif(NOT WIN32)
+# Copy output files / assets
+if (WIN32)
+	add_custom_command(TARGET APSudoku POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_directory
+			"${CMAKE_SOURCE_DIR}/assets" "$<TARGET_FILE_DIR:APSudoku>/assets"
+		COMMAND ${CMAKE_COMMAND} -E copy_directory
+			"${CMAKE_SOURCE_DIR}/assets" "${CMAKE_BINARY_DIR}/out_$<CONFIG>/assets"
+		COMMENT "Copying Assets\n")
+	add_custom_command(TARGET APSudoku POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy
+			"$<TARGET_FILE_DIR:APSudoku>/allegro_font-5.2.dll"
+			"$<TARGET_FILE_DIR:APSudoku>/allegro_primitives-5.2.dll"
+			"$<TARGET_FILE_DIR:APSudoku>/allegro_ttf-5.2.dll"
+			"$<TARGET_FILE_DIR:APSudoku>/allegro-5.2.dll"
+			"$<TARGET_FILE_DIR:APCpp>/APCpp.dll"
+			"$<TARGET_FILE:APSudoku>"
+				"${CMAKE_BINARY_DIR}/out_$<CONFIG>"
+		COMMENT "Packaging output\n")
+endif (WIN32)
+if (UNIX AND NOT APPLE)
+	add_custom_command(TARGET APSudoku POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_directory
+			"${CMAKE_SOURCE_DIR}/assets" "$<TARGET_FILE_DIR:APSudoku>/assets"
+		COMMAND ${CMAKE_COMMAND} -E copy_directory
+			"${CMAKE_SOURCE_DIR}/assets" "${CMAKE_BINARY_DIR}/out_$<CONFIG>/assets"
+		COMMENT "Copying Assets\n")
+	add_custom_command(TARGET APSudoku POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy
+			"${CMAKE_BINARY_DIR}/lib/liballegro_font.so.5.2"
+			"${CMAKE_BINARY_DIR}/lib/liballegro_primitives.so.5.2"
+			"${CMAKE_BINARY_DIR}/lib/liballegro_ttf.so.5.2"
+			"${CMAKE_BINARY_DIR}/lib/liballegro.so.5.2"
+			"${CMAKE_BINARY_DIR}/libAPCpp.so"
+			"$<TARGET_FILE:APSudoku>"
+				"${CMAKE_BINARY_DIR}/out_$<CONFIG>"
+		COMMENT "Packaging output\n")
+endif (UNIX AND NOT APPLE)

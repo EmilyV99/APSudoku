@@ -295,7 +295,7 @@ void build_gui()
 					{
 						ref.flags |= FL_SELECTED;
 						pop_inf("Controls",
-							std::format("LClick: Select (Hold, Shift, or Ctrl: Multi)"
+							format("LClick: Select (Hold, Shift, or Ctrl: Multi)"
 							"\nDouble-LClick: Select Matching (Shift or Ctrl: Multi)"
 							"\nRClick: Select (Shift or Ctrl: Deselect)"
 							"\nWASD/Arrow Keys: Move (Shift or Ctrl: Multi)"
@@ -928,7 +928,7 @@ void build_gui()
 		auto col_tf = make_shared<Column>(lbl_rx+2,topy,0,1,ALLEGRO_ALIGN_LEFT);
 		{
 			auto resx = get_config_dbl("GUI", "resx").value_or(CANVAS_W*2.0);
-			auto tf = make_shared<TextField>(0, 0, tfw, std::format("{}",resx), font_l);
+			auto tf = make_shared<TextField>(0, 0, tfw, format("{}",resx), font_l);
 			tf->onValidate = [](string const& o, string const& n, char c)
 				{
 					return validate_numeric(o,n,c);
@@ -948,7 +948,7 @@ void build_gui()
 		}
 		{
 			auto resy = get_config_dbl("GUI", "resy").value_or(CANVAS_H*2.0);
-			auto tf = make_shared<TextField>(0, 0, tfw, std::format("{}",resy), font_l);
+			auto tf = make_shared<TextField>(0, 0, tfw, format("{}",resy), font_l);
 			tf->onValidate = [](string const& o, string const& n, char c)
 				{
 					return validate_numeric(o,n,c);

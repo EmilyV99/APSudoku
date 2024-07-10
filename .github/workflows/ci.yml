@@ -38,3 +38,39 @@ jobs:
               with:
                 name: win_x64_output
                 path: 'artifacts/*'
+    build-linux:
+        name: Build (linux)
+
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v1
+              with:
+                submodules: 'recursive'
+            - name: Install Dependencies
+              run: sudo apt-get install -y libgl1-mesa-dev libegl1-mesa-dev libxcursor-dev libfmt-dev
+            - name: CMake configure
+              run: |
+                    bash ./initialize.sh
+            - name: Build
+              run: |
+                    cd build
+                    cmake --build . --config Release
+            - name: Package
+              shell: python
+              run: |
+                    import shutil
+                    from pathlib import Path
+                    
+                    path: Path = Path.cwd() / 'build' / 'out_RelWithDebInfo'
+                    dest: Path = Path.cwd() / 'artifacts' / 'APSudoku_Linux_x64'
+                    
+                    shutil.make_archive(
+                        base_name = dest,
+                        format = 'gztar',
+                        root_dir = path
+                        )
+            - uses: actions/upload-artifact@v4
+              with:
+                name: linux_x64_output
+                path: 'artifacts/*'

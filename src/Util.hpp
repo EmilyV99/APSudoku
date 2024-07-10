@@ -96,7 +96,7 @@ constexpr double operator ""_deg(unsigned long long int degrees)
 {
 	return deg_to_rad(degrees);
 }
-constexpr double operator ""_deg(char const* degrees)
+inline double operator ""_deg(char const* degrees)
 {
 	return deg_to_rad(std::stod(degrees));
 }
