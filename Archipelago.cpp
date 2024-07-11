@@ -265,7 +265,7 @@ void AP_Init(const char* ip, const char* game, const char* player_name, const ch
 					itr->second->status = AP_RequestStatus::Error;
 					itr = map_server_data.erase(itr);
 				}
-				AP_Error(format("Error connecting to Archipelago. Retries: {}", msg->errorInfo.retries));
+				AP_Error(format("Error connecting to Archipelago. (Status: {}, '{}') Retries: {}", msg->errorInfo.http_status, msg->errorInfo.reason, msg->errorInfo.retries));
 				if (isSSL)
 				{
 					webSocket.setUrl("ws://" + ap_ip);
